@@ -13,7 +13,7 @@ public class Wall {
     //Epaisseur de laine de verre en centimetres
     private static final int glassWoolLength=12;
 
-    private ArrayList<> probes;
+    private ArrayList<Material> wallParts;
 
 
 
