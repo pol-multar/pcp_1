@@ -49,3 +49,10 @@ atlassian-ide-plugin.xml
 com_crashlytics_export_strings.xml
 crashlytics.properties
 crashlytics-build.properties
+
+# Visual Paradigm
+*.vpp~*
+
+#OS Junk
+[Tt]humbs.db
+.DS_Store

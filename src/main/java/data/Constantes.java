@@ -22,10 +22,13 @@ public class Constantes {
     public static final double GRANITEC=790;
 
     //Temperatures en degré celsius
-    public static final double T0=20;
-    public static final double T1=55;
+    public static final int T0=20;
+    public static final int T1=55;
 
-    public static final double B=40;
+    public static final int B=40;
 
     public static final double OMEGA=86400/(2*Math.PI);
+
+    //Pas de temps (secondes)
+    public static final int PETIT_T=1;
 }
