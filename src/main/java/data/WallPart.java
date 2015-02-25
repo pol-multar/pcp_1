@@ -8,7 +8,7 @@ package data;
  */
 public class WallPart {
 
-    private int temp;
+    private double temp;
     private Material compos;
 
     /**
@@ -16,12 +16,12 @@ public class WallPart {
      * @param temp la temperature de ce bout de mur
      * @param compos le materiau composant ce bout de mur
      */
-    public WallPart(int temp, Material compos){
+    public WallPart(double temp, Material compos){
         this.temp=temp;
         this.compos=compos;
     }
 
-    public int getTemp(){
+    public double getTemp(){
         return temp;
     }
 

@@ -26,9 +26,9 @@ public class WallPartTempView extends JPanel {
     }
 
     private void initPanel(){
-        this.add(new JLabel(Integer.toString(Constantes.OUTSIDETEMP),JLabel.CENTER));
+        this.add(new JLabel(Double.toString(Constantes.OUTSIDETEMP),JLabel.CENTER));
         for( WallPart wallPart : wallParts ){
-            this.add( new JLabel(Integer.toString(wallPart.getTemp()),JLabel.CENTER));
+            this.add( new JLabel(Double.toString(wallPart.getTemp()),JLabel.CENTER));
         }
     }
 }
