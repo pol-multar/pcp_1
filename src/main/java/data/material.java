@@ -28,7 +28,7 @@ public enum Material {
     }
 
     public String toString(){
-        return "C'est un materiau de"+ name + "de largeur" + length;
+        return "C'est un materiau de "+ name + " de largeur " + length;
     }
 
 }

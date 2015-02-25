@@ -24,6 +24,7 @@ public class Constantes {
     //Temperatures en degré celsius
     public static final int T0=20;
     public static final int T1=55;
+    public static final int OUTSIDETEMP=110;
 
     public static final int B=40;
 
