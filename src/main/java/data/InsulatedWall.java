@@ -2,6 +2,9 @@ package data;
 
 import java.util.ArrayList;
 
+import static data.Constantes.*;
+
+
 /**
  * @author Maxime
  * @version 03/02/2015.
@@ -15,7 +18,7 @@ public class InsulatedWall {
     //Epaisseur totale mur+isolant
     public static final int insulatedWallLength = wallLength + insulationLength;
 
-    private ArrayList<Material> wallParts;
+    private ArrayList<WallPart> wallParts;
 
     private String wall;
     private String insulation;
@@ -41,32 +44,32 @@ public class InsulatedWall {
 
     /**
      * Mérhode d'initialisation du mur
-     * @param wall le type de materiaux composant le mur
+     * @param wallCompos le type de materiaux composant le mur
      * @param insulation le type de materiaux composant l'isolant
      */
-    private void initWall(Material wall, Material insulation) {
+    private void initWall(Material wallCompos, Material insulation) {
 
-        wallParts= new ArrayList<Material>();
+        wallParts= new ArrayList<WallPart>();
 
         int cpt;
 
         /* Je construit le mur */
-        for (cpt = 0; cpt < wallLength/wall.getLength(); cpt++) {
-            wallParts.add(cpt, wall);
+        for (cpt = 0; cpt < wallLength/wallCompos.getLength(); cpt++) {
+            wallParts.add(cpt, new WallPart(T0,wallCompos));
         }
 
         /* Je construis l'isolant */
-        for (cpt = wallLength/wall.getLength(); cpt < insulatedWallLength/insulation.getLength(); cpt++) {
-            wallParts.add(cpt, insulation);
+        for (cpt = wallLength/wallCompos.getLength(); cpt < insulatedWallLength/insulation.getLength(); cpt++) {
+            wallParts.add(cpt, new WallPart(T0,insulation));
         }
 
-        this.wall=wall.getName();
+        this.wall=wallCompos.getName();
         this.insulation=insulation.getName();
 
 
     }
 
-    public ArrayList<Material> getWallParts(){
+    public ArrayList<WallPart> getWallParts(){
         return wallParts;
     }
 

@@ -3,6 +3,7 @@ package data;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -46,9 +47,10 @@ public class InsulatedWallTest {
         assertEquals(8, wall3.getWallParts().size());
     }
 
+    //@Ignore("not ready yet")
     @Test
     public void testWallContent(){
-        ArrayList<Material> al=wall1.getWallParts();
+        ArrayList<WallPart> al=wall1.getWallParts();
         testAlContent(Material.BRICK,Material.GLASSWOOL,al);
         al=wall2.getWallParts();
         testAlContent(Material.GRANITE,Material.GLASSWOOL,al);
@@ -57,11 +59,11 @@ public class InsulatedWallTest {
 
     }
 
-    private void testAlContent(Material wall, Material insulation,ArrayList<Material> al){
-        assertEquals(wall,al.get(0));
-        assertEquals(wall,al.get(4));
-        assertEquals(insulation,al.get(5));
-        assertEquals(insulation,al.get(7));
+    private void testAlContent(Material wall, Material insulation,ArrayList<WallPart> al){
+        assertEquals(wall,al.get(0).getCompos());
+        assertEquals(wall,al.get(4).getCompos());
+        assertEquals(insulation,al.get(5).getCompos());
+        assertEquals(insulation,al.get(7).getCompos());
     }
 
 }
