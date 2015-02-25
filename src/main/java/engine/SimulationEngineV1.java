@@ -2,6 +2,7 @@ package engine;
 
 import data.InsulatedWall;
 import data.Material;
+import static data.Constantes.*;
 
 /**
  * @author mmultari
@@ -20,11 +21,11 @@ public class SimulationEngineV1 {
 
     }
 
-    private void calculateC(){
+    private double calculateC(Material material){
+
+        double grandC=(material.getLambda()*DT)/(material.getMu()*material.getC()*DX*DX);
+        return grandC;
 
     }
 
-    private double toKelvin(double tempCelsius){
-        return (tempCelsius+274.15);
-    }
 }

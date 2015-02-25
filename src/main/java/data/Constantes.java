@@ -31,8 +31,14 @@ public class Constantes {
     public static final double OMEGA=86400/(2*Math.PI);
 
     //Pas de temps (secondes)
-    public static final int DELTAT=1;
+    public static final int DT=1;
 
-    //Pas
+    //Pas de distance (m)
+    public static final double DX=0.02;
+
+    //Convertisseur de degre Celsius vers degre Kelvin
+    public static double toKelvin(double tempCelsius){
+        return (tempCelsius+274.15);
+    }
 
 }
