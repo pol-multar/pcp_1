@@ -20,8 +20,8 @@ public class InsulatedWall {
 
     private ArrayList<WallPart> wallParts;
 
-    private String wall;
-    private String insulation;
+    private Material wall;
+    private Material insulation;
 
 
     /**
@@ -63,14 +63,23 @@ public class InsulatedWall {
             wallParts.add(cpt, new WallPart(T0,insulation));
         }
 
-        this.wall=wallCompos.getName();
-        this.insulation=insulation.getName();
+        this.wall=wallCompos;
+        this.insulation=insulation;
 
 
     }
 
     public ArrayList<WallPart> getWallParts(){
         return wallParts;
+    }
+
+    public Material getWall() {
+        return wall;
+    }
+
+    public Material getInsulation() {
+
+        return insulation;
     }
 
     @Override
