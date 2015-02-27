@@ -29,7 +29,7 @@ public class WallPart {
         return compos;
     }
 
-    public void setTemp(int newTemp){
+    public void setTemp(double newTemp){
         this.temp=newTemp;
     }
 }
