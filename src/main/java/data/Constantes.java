@@ -25,6 +25,7 @@ public class Constantes {
     public static final double T0=20;
     public static final double T1=55;
     public static final double OUTSIDETEMP=110;
+    public static final double INSIDETEMP=20;
 
     public static final int B=40;
 
