@@ -24,6 +24,10 @@ public class SimulationEngineV1 {
     private ArrayList<Material> insulationComponents;
     private Boolean debug;
 
+    /**
+     * Constructeur de la classe simulation
+     * @param wall le mur dont on souhaite etudier l'evolution de temperature
+     */
     public SimulationEngineV1(InsulatedWall wall) {
         this.insulatedWall = wall;
         this.outsideTemp = OUTSIDETEMP;
@@ -38,13 +42,17 @@ public class SimulationEngineV1 {
         insulationComponents.add(Material.GLASSWOOL);
     }
 
+    /**
+     * La méthode principale d'execution de la simulation
+     */
+
     public void launchEngine() {
         oneStep();
 
     }
 
     /**
-     * Passage de T0 à T1
+     * Méthode représentant l'évolution de la temperature au cours d'un cycle
      */
     private void oneStep() {
 
@@ -72,12 +80,20 @@ public class SimulationEngineV1 {
 
         int lastPart = insulatedWall.getWallParts().size() - 1;
 
+
         updateWallPartTemp(insulatedWall.getWallParts().get(lastPart - 1), insulatedWall.getWallParts().get(lastPart), new WallPart(insideTemp, Material.GLASSWOOL), insulationC);
 
+        insideTemp = insulatedWall.getWallParts().get(lastPart).getTemp();
+
+        //Le cycme est termine
         _t++;
 
     }
 
+    /**
+     * Methode responsable de la mise a jour de la temperature de la premiere partie du mur
+     * @param firstPart
+     */
     private void updateFirstWallPartTemp(WallPart firstPart) {
         firstPart.setTemp(T1 + B * Math.sin(OMEGA * _t));
     }
@@ -96,6 +112,11 @@ public class SimulationEngineV1 {
     }
 
 
+    /**
+     * Methode permettant de calculer C, representant la fraction de degres perdus par rayonnement
+     * @param material le materiau dont on souhaite calculer le C
+     * @return la valeur de C calculee
+     */
     private double calculateC(Material material) {
 
         double grandC = (material.getLambda() * DT) / (material.getMu() * material.getC() * DX * DX);
