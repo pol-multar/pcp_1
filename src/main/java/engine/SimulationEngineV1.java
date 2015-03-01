@@ -12,12 +12,11 @@ import java.util.Observable;
 import static data.Constantes.*;
 
 
-
 /**
  * @author mmultari
  * @version 25/02/2015
  */
-public class SimulationEngineV1  {
+public class SimulationEngineV1 {
 
     private InsulatedWall insulatedWall;
     private double outsideTemp;
@@ -31,8 +30,10 @@ public class SimulationEngineV1  {
     private int stepOfChange;
     private boolean isChanged;
     private int execTime;
+
     /**
      * Constructeur de la classe simulation
+     *
      * @param wall le mur dont on souhaite etudier l'evolution de temperature
      */
     public SimulationEngineV1(InsulatedWall wall) {
@@ -40,7 +41,7 @@ public class SimulationEngineV1  {
         this.outsideTemp = OUTSIDETEMP;
         this.insideTemp = INSIDETEMP;
         this._t = 0;
-        this.stepOfChange=0;
+        this.stepOfChange = 0;
         this.wallC = calculateC(insulatedWall.getWall());
         this.insulationC = calculateC(insulatedWall.getInsulation());
         this.wallComponents = new ArrayList<>();
@@ -48,17 +49,18 @@ public class SimulationEngineV1  {
         wallComponents.add(Material.BRICK);
         wallComponents.add(Material.GRANITE);
         insulationComponents.add(Material.GLASSWOOL);
-        isChanged=false;
-        this.execTime=0;
+        isChanged = false;
+        this.execTime = 0;
     }
 
 
     /**
      * Methode permettant d'executer la simulation avec un nombre de cycle choisi
+     *
      * @param step le nombre de cycles choisit
      */
     public void runYourSimulation(int step) {
-        for (int i = 0; i <step ; i++) {
+        for (int i = 0; i < step; i++) {
             oneStep();
         }
     }
@@ -66,8 +68,8 @@ public class SimulationEngineV1  {
     /**
      * Methode permettant d'executer la simulation avec 100000 cycles
      */
-    public void runLongSimulation(){
-        for (int i = 0; i < 100000 ; i++) {
+    public void runLongSimulation() {
+        for (int i = 0; i < 100000; i++) {
             oneStep();
         }
     }
@@ -86,16 +88,17 @@ public class SimulationEngineV1  {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
-
-        for (int i = 0; i < insulatedWall.getWallParts().size() ; i++) {
-            String message="<elt><time>" + 0 + "</time><X>" + i + "</X><value>" + insulatedWall.getWallParts().get(i).getAskedTemp() + "</value></elt>";
+        //Envoi de l'etat initial du mur
+        for (int i = 0; i < insulatedWall.getWallParts().size(); i++) {
+            String message = "<elt><time>" + 0 + "</time><X>" + i + "</X><value>" + insulatedWall.getWallParts().get(i).getAskedTemp() + "</value></elt>";
             JavaWebSocketServer.getInstance().broadcastMessage(message);
         }
 
-        for (int i = 1; i < 200 ; i++) {
+        //Envoi de l'evolution du mur
+        for (int i = 1; i < 200; i++) {
             oneStep();
-            for (int j = 0; j <insulatedWall.getWallParts().size() ; j++) {
-                String message="<elt><time>" + i + "</time><X>" + j + "</X><value>" + insulatedWall.getWallParts().get(j).getAskedTemp() + "</value></elt>";
+            for (int j = 0; j < insulatedWall.getWallParts().size(); j++) {
+                String message = "<elt><time>" + i + "</time><X>" + j + "</X><value>" + insulatedWall.getWallParts().get(j).getAskedTemp() + "</value></elt>";
                 JavaWebSocketServer.getInstance().broadcastMessage(message);
             }
         }
@@ -106,7 +109,7 @@ public class SimulationEngineV1  {
      */
     private void oneStep() {
 
-        long timeBegin=System.currentTimeMillis();
+        long timeBegin = System.currentTimeMillis();
 
         //Etape 1: calculer la temperature du premier morceau du mur, directement soumis à l'action du soleil
 
@@ -137,21 +140,21 @@ public class SimulationEngineV1  {
         insideTemp = insulatedWall.getWallParts().get(lastPart).getTemp();
 
 
-
-        if(insulatedWall.getWallParts().get(lastPart).getAskedTemp()>20 && isChanged==false){
-            stepOfChange=_t;
-            isChanged=true;
+        if (insulatedWall.getWallParts().get(lastPart).getAskedTemp() > 20 && isChanged == false) {
+            stepOfChange = _t;
+            isChanged = true;
         }
 
         //Le cycle est termine
         _t++;
-        long timeEnd=System.currentTimeMillis();
-        this.execTime += (int) (timeEnd-timeBegin);
+        long timeEnd = System.currentTimeMillis();
+        this.execTime += (int) (timeEnd - timeBegin);
 
     }
 
     /**
      * Methode responsable de la mise a jour de la temperature de la premiere partie du mur
+     *
      * @param firstPart
      */
     private void updateFirstWallPartTemp(WallPart firstPart) {
@@ -168,9 +171,9 @@ public class SimulationEngineV1  {
      */
     private void updateWallPartTemp(WallPart previousPart, WallPart currentPart, WallPart nextPart, double bigC) {
 
-        double currentPartTemp=toKelvin(currentPart.getTemp());
-        double previousPartTemp=toKelvin(previousPart.getTemp());
-        double nextPartTemp=toKelvin(nextPart.getTemp());
+        double currentPartTemp = toKelvin(currentPart.getTemp());
+        double previousPartTemp = toKelvin(previousPart.getTemp());
+        double nextPartTemp = toKelvin(nextPart.getTemp());
 
         double newTemp = currentPartTemp + bigC * (nextPartTemp + previousPartTemp - 2 * (currentPartTemp));
 
@@ -180,6 +183,7 @@ public class SimulationEngineV1  {
 
     /**
      * Methode permettant de calculer C, representant la fraction de degres perdus par rayonnement
+     *
      * @param material le materiau dont on souhaite calculer le C
      * @return la valeur de C calculee
      */
