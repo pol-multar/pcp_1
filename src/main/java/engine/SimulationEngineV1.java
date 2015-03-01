@@ -52,21 +52,29 @@ public class SimulationEngineV1  {
         this.execTime=0;
     }
 
-    /**
-     * La méthode principale d'execution de la simulation
-     */
 
+    /**
+     * Methode permettant d'executer la simulation avec un nombre de cycle choisi
+     * @param step le nombre de cycles choisit
+     */
     public void runYourSimulation(int step) {
         for (int i = 0; i <step ; i++) {
             oneStep();
         }
     }
 
+    /**
+     * Methode permettant d'executer la simulation avec 100000 cycles
+     */
     public void runLongSimulation(){
         for (int i = 0; i < 100000 ; i++) {
             oneStep();
         }
     }
+
+    /**
+     * Methode permettant d'envoyer les resultats de la simulation avec un websocket
+     */
 
     public void runWebSimulation() {
 
