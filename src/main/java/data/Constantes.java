@@ -37,9 +37,22 @@ public class Constantes {
     //Pas de distance (m)
     public static final double DX=0.02;
 
-    //Convertisseur de degre Celsius vers degre Kelvin
+    /**
+     * Convertisseur de degre Celsius vers degre Kelvin
+     * @param tempCelsius la temperature a convertir
+     * @return la temperature convertie
+     */
     public static double toKelvin(double tempCelsius){
         return (tempCelsius+274.15);
+    }
+
+    /**
+     * Convertisseur de degre Kelvin vers degre Celsius
+     * @param tempKelvin la temperature a convertir
+     * @return la temperature convertie
+     */
+    public static double toCelsius(double tempKelvin){
+        return (tempKelvin-274.15);
     }
 
 }

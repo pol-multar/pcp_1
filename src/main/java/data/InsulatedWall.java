@@ -84,8 +84,16 @@ public class InsulatedWall {
 
     @Override
     public String toString() {
-        return "C est un mur de "+ insulatedWallLength + " centimetres.\n"
-                + "Il est compose sur sa face exterieure de "+wall+" et sur sa face intérieure de "+insulation+".";
+
+        String walls = new String();
+
+        for(WallPart wallPart : wallParts){
+        walls+=wallPart.toString()+"\n";
+        }
+
+        return "mur de "+ insulatedWallLength + " centimetres.\n"
+                + "Il est compose sur sa face exterieure de "+wall+" et sur sa face intérieure de "+insulation+".\n"
+                + walls;
     }
 
 }

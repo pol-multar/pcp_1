@@ -32,4 +32,10 @@ public class WallPart {
     public void setTemp(double newTemp){
         this.temp=newTemp;
     }
+
+    @Override
+    public String toString() {
+        Integer integer =  Integer.valueOf((int) Math.round(temp));
+        return "element du mur en "+compos+". Sa temperature est de "+integer+"\n";
+    }
 }

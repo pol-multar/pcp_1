@@ -46,9 +46,16 @@ public class SimulationEngineV1 {
      * La méthode principale d'execution de la simulation
      */
 
-    public void launchEngine() {
-        oneStep();
+    public void runYourSimulation(int step) {
+        for (int i = 0; i <step ; i++) {
+            oneStep();
+        }
+    }
 
+    public void runLongSimulation(){
+        for (int i = 0; i < 100000 ; i++) {
+            oneStep();
+        }
     }
 
     /**
@@ -80,12 +87,11 @@ public class SimulationEngineV1 {
 
         int lastPart = insulatedWall.getWallParts().size() - 1;
 
-
         updateWallPartTemp(insulatedWall.getWallParts().get(lastPart - 1), insulatedWall.getWallParts().get(lastPart), new WallPart(insideTemp, Material.GLASSWOOL), insulationC);
 
         insideTemp = insulatedWall.getWallParts().get(lastPart).getTemp();
 
-        //Le cycme est termine
+        //Le cycle est termine
         _t++;
 
     }
@@ -107,8 +113,14 @@ public class SimulationEngineV1 {
      * @param bigC         la constante C relative au materiau composant la partie de mur courrante
      */
     private void updateWallPartTemp(WallPart previousPart, WallPart currentPart, WallPart nextPart, double bigC) {
-        double newTemp = currentPart.getTemp() + bigC * (nextPart.getTemp() + previousPart.getTemp() - 2 * (currentPart.getTemp()));
-        currentPart.setTemp(newTemp);
+
+        double currentPartTemp=toKelvin(currentPart.getTemp());
+        double previousPartTemp=toKelvin(previousPart.getTemp());
+        double nextPartTemp=toKelvin(nextPart.getTemp());
+
+        double newTemp = currentPartTemp + bigC * (nextPartTemp + previousPartTemp - 2 * (currentPartTemp));
+
+        currentPart.setTemp(toCelsius(newTemp));
     }
 
 
