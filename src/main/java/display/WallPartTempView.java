@@ -6,13 +6,15 @@ import data.WallPart;
 import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.Observable;
+import java.util.Observer;
 
 
 /**
  * @author mmultari
  * @version 25/02/2015
  */
-public class WallPartTempView extends JPanel {
+public class WallPartTempView extends JPanel implements Observer {
 
     private ArrayList<WallPart> wallParts;
 
@@ -30,5 +32,10 @@ public class WallPartTempView extends JPanel {
         for( WallPart wallPart : wallParts ){
             this.add( new JLabel(Double.toString(wallPart.getTemp()),JLabel.CENTER));
         }
+    }
+
+    @Override
+    public void update(Observable o, Object arg) {
+        initPanel();
     }
 }

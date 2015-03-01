@@ -1,18 +1,23 @@
 package engine;
 
+import WebSocketServer.JavaWebSocket;
+import WebSocketServer.JavaWebSocketServer;
 import data.InsulatedWall;
 import data.Material;
 import data.WallPart;
 
 import java.util.ArrayList;
+import java.util.Observable;
 
 import static data.Constantes.*;
+
+
 
 /**
  * @author mmultari
  * @version 25/02/2015
  */
-public class SimulationEngineV1 {
+public class SimulationEngineV1  {
 
     private InsulatedWall insulatedWall;
     private double outsideTemp;
@@ -55,6 +60,31 @@ public class SimulationEngineV1 {
     public void runLongSimulation(){
         for (int i = 0; i < 100000 ; i++) {
             oneStep();
+        }
+    }
+
+    public void runWebSimulation() {
+
+        JavaWebSocketServer.getInstance();// Init the server
+
+        try {
+            Thread.sleep(10000);
+        } catch (InterruptedException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
+        for (int i = 0; i < insulatedWall.getWallParts().size() ; i++) {
+            String message="<elt><time>" + 0 + "</time><X>" + i + "</X><value>" + insulatedWall.getWallParts().get(i).getAskedTemp() + "</value></elt>";
+            JavaWebSocketServer.getInstance().broadcastMessage(message);
+        }
+
+        for (int i = 1; i < 200 ; i++) {
+            oneStep();
+            for (int j = 0; j <insulatedWall.getWallParts().size() ; j++) {
+                String message="<elt><time>" + i + "</time><X>" + j + "</X><value>" + insulatedWall.getWallParts().get(j).getAskedTemp() + "</value></elt>";
+                JavaWebSocketServer.getInstance().broadcastMessage(message);
+            }
         }
     }
 

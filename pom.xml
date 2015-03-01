@@ -22,7 +22,7 @@
         <resource>
             <directory>src/main/resources</directory>
             <includes>
-                <include>keystore.test</include>
+                <include></include>
             </includes>
             <targetPath>../src/main/resources</targetPath>
         </resource>
@@ -52,7 +52,25 @@
             <version>4.12</version>
         </dependency>
 
+
+        <dependency>
+            <groupId>ProgConcWebSocketServer</groupId>
+            <artifactId>ProgConcWebSocketServer</artifactId>
+            <scope>system</scope>
+            <version>1.0</version>
+            <systemPath>${basedir}\src\lib\ProgConcWebSocketServer.jar</systemPath>
+        </dependency>
+
+        <dependency>
+            <groupId>webbit-0.4.15-full</groupId>
+            <artifactId>webbit-0.4.15-full</artifactId>
+            <scope>system</scope>
+            <version>1.0</version>
+            <systemPath>${basedir}\src\lib\webbit-0.4.15-full.jar</systemPath>
+        </dependency>
+
     </dependencies>
+
 
 
 </project>

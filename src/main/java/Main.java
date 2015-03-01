@@ -1,4 +1,5 @@
 import data.InsulatedWall;
+import display.WallView;
 import engine.SimulationEngineV1;
 
 /**
@@ -7,13 +8,21 @@ import engine.SimulationEngineV1;
  */
 public class Main {
 
+    private static boolean debug;
+
     public static void main(String[] args) {
 
+        debug=false;
+
         InsulatedWall myWall = new InsulatedWall();
-        System.out.println(myWall);
+        if(debug)System.out.println(myWall);
         SimulationEngineV1 mySimu = new SimulationEngineV1(myWall);
-        mySimu.runLongSimulation();
-        System.out.println("Après 100 000 cycles :");
-        System.out.println(myWall);
+        //mySimu.runLongSimulation();
+        mySimu.runWebSimulation();
+        if(debug) {
+            System.out.println("Après 100 000 cycles :");
+            System.out.println(myWall);
+        }
+
     }
 }

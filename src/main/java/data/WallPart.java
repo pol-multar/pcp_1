@@ -25,6 +25,11 @@ public class WallPart {
         return temp;
     }
 
+    public int getAskedTemp(){
+        Integer integer =  Integer.valueOf((int) Math.round(temp));
+        return integer;
+    }
+
     public Material getCompos(){
         return compos;
     }

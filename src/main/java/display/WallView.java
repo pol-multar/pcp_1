@@ -11,25 +11,30 @@ import java.util.ArrayList;
  * @author mmultari
  * @version 25/02/2015
  */
-public class Window extends JFrame {
+public class WallView extends JFrame {
 
     private ArrayList<WallPart> wallParts;
+    private WallPartView wallPartView;
+    private WallPartTempView wallPartTempView;
 
-    public Window(ArrayList<WallPart> wallParts){
+    public WallView(ArrayList<WallPart> wallParts){
         this.wallParts=wallParts;
         this.setTitle("Programmation concurente - Simulation de transfert de chaleur");
-        this.setSize(800,800);
+        this.setSize(600,600);
         this.setLocationRelativeTo(null);
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         this.setLayout(new BorderLayout());
         this.getContentPane().add(new InfosView(), BorderLayout.NORTH);
-        this.getContentPane().add(new WallPartView(wallParts), BorderLayout.CENTER);
-        this.getContentPane().add(new WallPartTempView(wallParts), BorderLayout.SOUTH);
+        wallPartView=new WallPartView(wallParts);
+        this.getContentPane().add(wallPartView, BorderLayout.CENTER);
+        wallPartTempView=new WallPartTempView(wallParts);
+        this.getContentPane().add(wallPartTempView, BorderLayout.SOUTH);
         this.setVisible(true);
 
     }
 
-
-
+    public WallPartTempView getWallPartTempView() {
+        return wallPartTempView;
+    }
 }
