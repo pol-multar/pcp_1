@@ -12,13 +12,15 @@ public class Main {
 
     public static void main(String[] args) {
 
-        debug=false;
+        debug=true;
 
         InsulatedWall myWall = new InsulatedWall();
         if(debug)System.out.println(myWall);
+        WallView myWin0 = new WallView(myWall.getWallParts(),0);
         SimulationEngineV1 mySimu = new SimulationEngineV1(myWall);
-        //mySimu.runLongSimulation();
-        mySimu.runWebSimulation();
+        mySimu.runLongSimulation();
+        //mySimu.runWebSimulation();
+        WallView myWin100000 = new WallView(myWall.getWallParts(),100000);
         if(debug) {
             System.out.println("Après 100 000 cycles :");
             System.out.println(myWall);

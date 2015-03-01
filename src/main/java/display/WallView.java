@@ -17,7 +17,7 @@ public class WallView extends JFrame {
     private WallPartView wallPartView;
     private WallPartTempView wallPartTempView;
 
-    public WallView(ArrayList<WallPart> wallParts){
+    public WallView(ArrayList<WallPart> wallParts,int cycle){
         this.wallParts=wallParts;
         this.setTitle("Programmation concurente - Simulation de transfert de chaleur");
         this.setSize(600,600);
@@ -25,7 +25,7 @@ public class WallView extends JFrame {
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         this.setLayout(new BorderLayout());
-        this.getContentPane().add(new InfosView(), BorderLayout.NORTH);
+        this.getContentPane().add(new JLabel("Cycle : "+cycle,JLabel.CENTER), BorderLayout.NORTH);
         wallPartView=new WallPartView(wallParts);
         this.getContentPane().add(wallPartView, BorderLayout.CENTER);
         wallPartTempView=new WallPartTempView(wallParts);

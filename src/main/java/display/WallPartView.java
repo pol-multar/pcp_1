@@ -24,7 +24,7 @@ public class WallPartView extends JPanel {
     }
 
     private void initPanel() {
-        this.add(new JLabel("Exterieur",JLabel.CENTER));
+        //this.add(new JLabel("Exterieur",JLabel.CENTER));
         for( WallPart wallPart : wallParts ){
             this.add( new JLabel(wallPart.getCompos().getName(),JLabel.CENTER));
         }
