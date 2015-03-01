@@ -56,3 +56,6 @@ crashlytics-build.properties
 #OS Junk
 [Tt]humbs.db
 .DS_Store
+calculer_c.txt
+*.docx
+*.tmp
