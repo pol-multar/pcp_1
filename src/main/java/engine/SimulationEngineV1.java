@@ -28,7 +28,9 @@ public class SimulationEngineV1  {
     private ArrayList<Material> wallComponents;
     private ArrayList<Material> insulationComponents;
     private Boolean debug;
-
+    private int stepOfChange;
+    private boolean isChanged;
+    private int execTime;
     /**
      * Constructeur de la classe simulation
      * @param wall le mur dont on souhaite etudier l'evolution de temperature
@@ -38,6 +40,7 @@ public class SimulationEngineV1  {
         this.outsideTemp = OUTSIDETEMP;
         this.insideTemp = INSIDETEMP;
         this._t = 0;
+        this.stepOfChange=0;
         this.wallC = calculateC(insulatedWall.getWall());
         this.insulationC = calculateC(insulatedWall.getInsulation());
         this.wallComponents = new ArrayList<>();
@@ -45,6 +48,8 @@ public class SimulationEngineV1  {
         wallComponents.add(Material.BRICK);
         wallComponents.add(Material.GRANITE);
         insulationComponents.add(Material.GLASSWOOL);
+        isChanged=false;
+        this.execTime=0;
     }
 
     /**
@@ -93,6 +98,8 @@ public class SimulationEngineV1  {
      */
     private void oneStep() {
 
+        long timeBegin=System.currentTimeMillis();
+
         //Etape 1: calculer la temperature du premier morceau du mur, directement soumis à l'action du soleil
 
         updateFirstWallPartTemp(insulatedWall.getWallParts().get(0));
@@ -121,8 +128,17 @@ public class SimulationEngineV1  {
 
         insideTemp = insulatedWall.getWallParts().get(lastPart).getTemp();
 
+
+
+        if(insulatedWall.getWallParts().get(lastPart).getAskedTemp()>20 && isChanged==false){
+            stepOfChange=_t;
+            isChanged=true;
+        }
+
         //Le cycle est termine
         _t++;
+        long timeEnd=System.currentTimeMillis();
+        this.execTime += (int) (timeEnd-timeBegin);
 
     }
 
@@ -166,4 +182,11 @@ public class SimulationEngineV1  {
 
     }
 
+    public int getStepOfChange() {
+        return stepOfChange;
+    }
+
+    public int getExecTime() {
+        return execTime;
+    }
 }

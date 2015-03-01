@@ -1,3 +1,4 @@
+import com.sun.org.apache.xpath.internal.SourceTree;
 import data.InsulatedWall;
 import display.WallView;
 import engine.SimulationEngineV1;
@@ -24,6 +25,8 @@ public class Main {
         if(debug) {
             System.out.println("Après 100 000 cycles :");
             System.out.println(myWall);
+            System.out.println("Changement a partir de l'etape "+mySimu.getStepOfChange());
+            System.out.println("Temps d'execution de la simulation : "+mySimu.getExecTime()+" ms");
         }
 
     }
