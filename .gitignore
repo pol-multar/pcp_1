@@ -59,3 +59,5 @@ crashlytics-build.properties
 calculer_c.txt
 *.docx
 *.tmp
+
+infos/
