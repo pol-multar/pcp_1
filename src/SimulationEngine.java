@@ -21,38 +21,39 @@ public class SimulationEngine {
     private int execTime;
 
     //Le tableau qui contiendra les temperatures prochaines du mur
-    private double [] nextTemp;
+    private double[] nextTemp;
 
     //Le tableau qui contiendra les temperatures actuelles du mur
-    private double [] currentTemp;
+    private double[] currentTemp;
 
     CyclicBarrier barrier;
 
     /**
      * Constructeur de la classe simulation
-     * @param wallCompos le materiau utilise pour composer le mur
+     *
+     * @param wallCompos       le materiau utilise pour composer le mur
      * @param insolationCompos le materiau utilise pour isoler le mur
      */
     public SimulationEngine(Material wallCompos, Material insolationCompos) {
-        this.currentTemp= new double [9];
-        this.nextTemp= new double[9];
+        this.currentTemp = new double[9];
+        this.nextTemp = new double[9];
         this.wallC = calculateC(wallCompos);
         this.insulationC = calculateC(insolationCompos);
         this._t = 0;
         this.stepOfChange = 0;
         isChanged = false;
         this.execTime = 0;
-        barrier=new CyclicBarrier(7);
+        barrier = new CyclicBarrier(8);//7 threads+le main
         initWall();
     }
 
     private void initWall() {
-        for (int i = 0; i < currentTemp.length-1 ; i++) {
-            currentTemp[i]=nextTemp[i]=Constantes.T0;
+        for (int i = 0; i < currentTemp.length - 1; i++) {
+            currentTemp[i] = nextTemp[i] = Constantes.T0;
         }
-        currentTemp[0]=nextTemp[0]=Constantes.OUTSIDETEMP;
+        currentTemp[0] = nextTemp[0] = Constantes.OUTSIDETEMP;
         //System.out.println("Valeur de current: " +currentTemp[0]+" valeur de next: "+nextTemp[0]);
-        currentTemp[8]=nextTemp[8]=Constantes.INSIDETEMP;
+        currentTemp[8] = nextTemp[8] = Constantes.INSIDETEMP;
         //System.out.println("Valeur de current: " +currentTemp[8]+" valeur de next: "+nextTemp[8]);
     }
 
@@ -76,6 +77,14 @@ public class SimulationEngine {
         for (int i = 0; i < 100000; i++) {
             oneStep();
             System.out.println(this);
+        }
+    }
+
+
+    public void runMultiThreadSimulation(int steps) {
+        for (int i = 1; i < currentTemp.length-1; i++) {
+            new Thread(new RunSimulation(this, i, steps)).start();
+            System.out.println("Lancement du Thread"+i);
         }
     }
 
@@ -123,27 +132,27 @@ public class SimulationEngine {
 
         /* Etape 1 : modification des parties du mur composees du premier materiau, soit les parties 1 a 4 */
         for (int i = 1; i < 5; i++) {
-            nextTemp[i]=updateWallPartTemp(currentTemp[i-1], currentTemp[i], currentTemp[i+1], this.wallC);
+            nextTemp[i] = updateWallPartTemp(currentTemp[i - 1], currentTemp[i], currentTemp[i + 1], this.wallC);
         }
 
         /* Etape 2 : modification de la temperature de la partie du milieu, soit la partie 5 */
 
-        nextTemp[5]=currentTemp[5]+this.wallC*(currentTemp[4]-currentTemp[5])+this.insulationC*(currentTemp[6]-currentTemp[5]);
+        nextTemp[5] = currentTemp[5] + this.wallC * (currentTemp[4] - currentTemp[5]) + this.insulationC * (currentTemp[6] - currentTemp[5]);
 
         /* Etape 3 : modification de la temperature des dernieres parties du mur, soit les parties 6 et 7 */
 
-        for(int i=6; i<currentTemp.length-1; i++){
-            nextTemp[i]=updateWallPartTemp(currentTemp[i-1], currentTemp[i], currentTemp[i+1], this.insulationC);
+        for (int i = 6; i < currentTemp.length - 1; i++) {
+            nextTemp[i] = updateWallPartTemp(currentTemp[i - 1], currentTemp[i], currentTemp[i + 1], this.insulationC);
         }
 
-         if(Constantes.toInt(nextTemp[7]) > 20 && isChanged == false) {
+        if (Constantes.toInt(nextTemp[7]) > 20 && isChanged == false) {
             stepOfChange = _t;
             isChanged = true;
         }
 
         /*  Je met a jour les temperatures */
-        for (int i = 0; i < currentTemp.length ; i++) {
-            currentTemp[i]=nextTemp[i];
+        for (int i = 0; i < currentTemp.length; i++) {
+            currentTemp[i] = nextTemp[i];
             //System.out.println("Nouvelle temperature de "+i+" = "+currentTemp[i]);
         }
 
@@ -191,19 +200,23 @@ public class SimulationEngine {
         return execTime;
     }
 
-    public int get_t() {
-        return _t;
+    public void setStepOfChange(int stepOfChange) {
+        this.stepOfChange = stepOfChange;
     }
 
-    public void set_t(int _t) {
-        this._t = _t;
+    public void setChanged(boolean isChanged) {
+        this.isChanged = isChanged;
+    }
+
+    public boolean isChanged() {
+        return isChanged;
     }
 
     public double getCurrentTemp(int index) {
         return currentTemp[index];
     }
 
-    public void updateCurrentTemp(double newTemp,int index) {
+    public void updateCurrentTemp(double newTemp, int index) {
         this.currentTemp[index] = newTemp;
     }
 
@@ -219,17 +232,29 @@ public class SimulationEngine {
         return barrier;
     }
 
+    public int get_t() {
+        return _t;
+    }
+
+    public void set_t(int _t) {
+        this._t = _t;
+    }
+
+    public void setExecTime(int execTime) {
+        this.execTime = execTime;
+    }
+
     @Override
-    public String toString(){
-        String toReturn="t="+_t*600+" seconde(s) ";
+    public String toString() {
+        String toReturn = "t=" + _t * 600 + " seconde(s) ";
         for (int i = 0; i < 5; i++) {
-            toReturn+=Constantes.toInt(currentTemp[i])+",";
+            toReturn += Constantes.toInt(currentTemp[i]) + ",";
         }
-        toReturn+=Constantes.toInt(currentTemp[5])+"-"+Constantes.toInt(currentTemp[5])+",";
-        for(int i=6; i<8; i++){
-            toReturn+=Constantes.toInt(currentTemp[i])+",";
+        toReturn += Constantes.toInt(currentTemp[5]) + "-" + Constantes.toInt(currentTemp[5]) + ",";
+        for (int i = 6; i < 8; i++) {
+            toReturn += Constantes.toInt(currentTemp[i]) + ",";
         }
-        toReturn+=Constantes.toInt(currentTemp[8]);
+        toReturn += Constantes.toInt(currentTemp[8]);
         return toReturn;
     }
 }

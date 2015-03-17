@@ -1,3 +1,5 @@
+import java.util.concurrent.BrokenBarrierException;
+
 /**
  * @author mmultari
  * @version 01/03/2015
@@ -10,18 +12,33 @@ public class Main {
 
         //Mur en granite
 
-        debug=true;
-        SimulationEngine mySimu = new SimulationEngine(Material.BRICK,Material.GLASSWOOL);
-        if(debug)System.out.println(mySimu);
-        mySimu.runYourSimulation(10);
-        //mySimu.runWebSimulation();
-        //mySimu.runLongSimulation();
-//        if(debug) {
-//            System.out.println("Après 100 000 cycles :");
-//            System.out.println(mySimu);
-//        }
-        System.out.println("Changement a partir de l'etape "+mySimu.getStepOfChange());
-        System.out.println("Temps d'execution de la simulation : "+mySimu.getExecTime()+" ms");
+        debug = true;
+        SimulationEngine mySimu = new SimulationEngine(Material.BRICK, Material.GLASSWOOL);
+        if (debug) System.out.println(mySimu);
+        int nbStep=100000;
+        mySimu.runMultiThreadSimulation(nbStep);
+
+        for (int i = 0; i <nbStep ; i++) {
+            try {
+                mySimu.getBarrier().await();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            } catch (BrokenBarrierException e) {
+                e.printStackTrace();
+            }
+            //System.out.println("Main : fin des calculs de l'etape "+i+" attente de l'ecriture de la mise a jour");
+            try {
+                mySimu.getBarrier().await();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            } catch (BrokenBarrierException e) {
+                e.printStackTrace();
+            }
+            System.out.println(mySimu);
+        }
+
+        System.out.println("Changement a partir de l'etape " + mySimu.getStepOfChange());
+        System.out.println("Temps d'execution de la simulation : " + mySimu.getExecTime() + " ms");
 
     }
 }
