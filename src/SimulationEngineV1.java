@@ -7,8 +7,6 @@ import java.util.ArrayList;
  */
 public class SimulationEngineV1 {
 
-    //Le mur que l'on va etudier
-    //private InsulatedWall insulatedWall;
     private int _t;
     //Le C du materiau composant le mur
     private double wallC;
@@ -16,8 +14,9 @@ public class SimulationEngineV1 {
     private double insulationC;
     //L'etape ou la temperature a change
     private int stepOfChange;
-    //Savoir
+    //Savoir si l'on a deja la premiere etape de changement de temperature
     private boolean isChanged;
+    //Contient le temps d'execution de l'algorithme
     private int execTime;
 
     //Le tableau qui contiendra les temperatures prochaines du mur
@@ -25,12 +24,6 @@ public class SimulationEngineV1 {
 
     //Le tableau qui contiendra les temperatures actuelles du mur
     private double [] currentTemp;
-
-    /**
-     * Constructeur de la classe simulation
-     *
-     * @param wall le mur dont on souhaite etudier l'evolution de temperature
-     */
 
     /**
      * Constructeur de la classe simulation
@@ -42,14 +35,22 @@ public class SimulationEngineV1 {
         this.nextTemp= new double[9];
         this.wallC = calculateC(wallCompos);
         this.insulationC = calculateC(insolationCompos);
-
         this._t = 0;
         this.stepOfChange = 0;
         isChanged = false;
         this.execTime = 0;
-
+        initWall();
     }
 
+    private void initWall() {
+        for (int i = 0; i < currentTemp.length-1 ; i++) {
+            currentTemp[i]=nextTemp[i]=Constantes.T0;
+        }
+        currentTemp[0]=nextTemp[0]=Constantes.OUTSIDETEMP;
+        //System.out.println("Valeur de current: " +currentTemp[0]+" valeur de next: "+nextTemp[0]);
+        currentTemp[8]=nextTemp[8]=Constantes.INSIDETEMP;
+        //System.out.println("Valeur de current: " +currentTemp[8]+" valeur de next: "+nextTemp[8]);
+    }
 
 
     /**
@@ -60,6 +61,7 @@ public class SimulationEngineV1 {
     public void runYourSimulation(int step) {
         for (int i = 0; i < step; i++) {
             oneStep();
+            System.out.println(this);
         }
     }
 
@@ -69,6 +71,7 @@ public class SimulationEngineV1 {
     public void runLongSimulation() {
         for (int i = 0; i < 100000; i++) {
             oneStep();
+            System.out.println(this);
         }
     }
 
@@ -105,13 +108,12 @@ public class SimulationEngineV1 {
     /**
      * Méthode représentant l'évolution de la temperature au cours d'un cycle
      */
-    //TODO modifier les temperatures a la fin !
     private void oneStep() {
 
         long timeBegin = System.currentTimeMillis();
 
         /**
-         * La premiere et la dernière partie du mur sont des constantes,
+         * La premiere et la dernière partie du mur (respectivement partie 0 et partie 8) sont des constantes,
          * on ne va donc pas modifier leur valeur de temperature
          */
 
@@ -119,16 +121,27 @@ public class SimulationEngineV1 {
         for (int i = 1; i < 5; i++) {
             nextTemp[i]=updateWallPartTemp(currentTemp[i-1], currentTemp[i], currentTemp[i+1], this.wallC);
         }
-//TODO corriger la suite
 
         /* Etape 2 : modification de la temperature de la partie du milieu, soit la partie 5 */
 
+        nextTemp[5]=currentTemp[5]+this.wallC*(currentTemp[4]-currentTemp[5])+this.insulationC*(currentTemp[6]-currentTemp[5]);
+
         /* Etape 3 : modification de la temperature des dernieres parties du mur, soit les parties 6 et 7 */
 
-        /*if (insulatedWall.getWallParts().get(lastPart).getAskedTemp() > 20 && isChanged == false) {
+        for(int i=6; i<currentTemp.length-1; i++){
+            nextTemp[i]=updateWallPartTemp(currentTemp[i-1], currentTemp[i], currentTemp[i+1], this.insulationC);
+        }
+
+         if(Constantes.toInt(nextTemp[7]) > 20 && isChanged == false) {
             stepOfChange = _t;
             isChanged = true;
-        }*/
+        }
+
+        /*  Je met a jour les temperatures */
+        for (int i = 0; i < currentTemp.length ; i++) {
+            currentTemp[i]=nextTemp[i];
+            //System.out.println("Nouvelle temperature de "+i+" = "+currentTemp[i]);
+        }
 
         //Le cycle est termine
         _t++;
@@ -148,7 +161,7 @@ public class SimulationEngineV1 {
      */
     private double updateWallPartTemp(double previousPart, double currentPart, double nextPart, double bigC) {
 
-        return currentPart + bigC * (nextPart + previousPart - 2 * (currentPart));
+        return (currentPart + bigC * (nextPart + previousPart - 2 * (currentPart)));
 
     }
 
@@ -172,5 +185,19 @@ public class SimulationEngineV1 {
 
     public int getExecTime() {
         return execTime;
+    }
+
+    @Override
+    public String toString(){
+        String toReturn="t="+_t*600+" seconde(s) ";
+        for (int i = 0; i < 5; i++) {
+            toReturn+=Constantes.toInt(currentTemp[i])+",";
+        }
+        toReturn+=Constantes.toInt(currentTemp[5])+"-"+Constantes.toInt(currentTemp[5])+",";
+        for(int i=6; i<8; i++){
+            toReturn+=Constantes.toInt(currentTemp[i])+",";
+        }
+        toReturn+=Constantes.toInt(currentTemp[8]);
+        return toReturn;
     }
 }

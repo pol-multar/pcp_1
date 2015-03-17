@@ -30,10 +30,12 @@ public class Constantes {
     public static final double OMEGA=86400/(2*Math.PI);
 
     //Pas de temps (secondes)
-    public static final int DT=1;
+    //public static final int DT=1;
+    public static final int DT=600;
 
     //Pas d'espace (m)
-    public static final double DX=0.02;
+    //public static final double DX=0.02;
+    public static final double DX=0.04;
 
     /**
      * Convertisseur de degre Celsius vers degre Kelvin
@@ -51,6 +53,11 @@ public class Constantes {
      */
     public static double toCelsius(double tempKelvin){
         return (tempKelvin-274.15);
+    }
+
+    public static int toInt(double aDouble){
+        Integer integer =  Integer.valueOf((int) Math.round(aDouble));
+        return integer;
     }
 
 }
