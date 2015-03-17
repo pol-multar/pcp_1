@@ -1,11 +1,12 @@
 import java.util.ArrayList;
+import java.util.concurrent.CyclicBarrier;
 
 
 /**
  * @author mmultari
  * @version 25/02/2015
  */
-public class SimulationEngineV1 {
+public class SimulationEngine {
 
     private int _t;
     //Le C du materiau composant le mur
@@ -25,12 +26,14 @@ public class SimulationEngineV1 {
     //Le tableau qui contiendra les temperatures actuelles du mur
     private double [] currentTemp;
 
+    CyclicBarrier barrier;
+
     /**
      * Constructeur de la classe simulation
      * @param wallCompos le materiau utilise pour composer le mur
      * @param insolationCompos le materiau utilise pour isoler le mur
      */
-    public SimulationEngineV1(Material wallCompos, Material insolationCompos) {
+    public SimulationEngine(Material wallCompos, Material insolationCompos) {
         this.currentTemp= new double [9];
         this.nextTemp= new double[9];
         this.wallC = calculateC(wallCompos);
@@ -39,6 +42,7 @@ public class SimulationEngineV1 {
         this.stepOfChange = 0;
         isChanged = false;
         this.execTime = 0;
+        barrier=new CyclicBarrier(7);
         initWall();
     }
 
@@ -79,7 +83,7 @@ public class SimulationEngineV1 {
      * Methode permettant d'envoyer les resultats de la simulation avec un websocket
      */
 
-    public void runWebSimulation() {
+   /* public void runWebSimulation() {
 
         JavaWebSocketServer.getInstance();// Init the server
 
@@ -103,7 +107,7 @@ public class SimulationEngineV1 {
                 JavaWebSocketServer.getInstance().broadcastMessage(message);
             }
         }
-    }
+    }*/
 
     /**
      * Méthode représentant l'évolution de la temperature au cours d'un cycle
@@ -159,7 +163,7 @@ public class SimulationEngineV1 {
      * @param nextPart     la partie de mur suivante
      * @param bigC         la constante C relative au materiau composant la partie de mur courrante
      */
-    private double updateWallPartTemp(double previousPart, double currentPart, double nextPart, double bigC) {
+    public double updateWallPartTemp(double previousPart, double currentPart, double nextPart, double bigC) {
 
         return (currentPart + bigC * (nextPart + previousPart - 2 * (currentPart)));
 
@@ -185,6 +189,34 @@ public class SimulationEngineV1 {
 
     public int getExecTime() {
         return execTime;
+    }
+
+    public int get_t() {
+        return _t;
+    }
+
+    public void set_t(int _t) {
+        this._t = _t;
+    }
+
+    public double getCurrentTemp(int index) {
+        return currentTemp[index];
+    }
+
+    public void updateCurrentTemp(double newTemp,int index) {
+        this.currentTemp[index] = newTemp;
+    }
+
+    public double getWallC() {
+        return wallC;
+    }
+
+    public double getInsulationC() {
+        return insulationC;
+    }
+
+    public CyclicBarrier getBarrier() {
+        return barrier;
     }
 
     @Override

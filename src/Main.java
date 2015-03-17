@@ -11,7 +11,7 @@ public class Main {
         //Mur en granite
 
         debug=true;
-        SimulationEngineV1 mySimu = new SimulationEngineV1(Material.BRICK,Material.GLASSWOOL);
+        SimulationEngine mySimu = new SimulationEngine(Material.BRICK,Material.GLASSWOOL);
         if(debug)System.out.println(mySimu);
         mySimu.runYourSimulation(10);
         //mySimu.runWebSimulation();
