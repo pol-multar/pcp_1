@@ -39,6 +39,6 @@ public class WallPart {
     @Override
     public String toString() {
         Integer integer =  Integer.valueOf((int) Math.round(temp));
-        return "element du mur en "+compos+". Sa temperature est de "+integer+"\n";
+        return "element du mur en "+compos+". Sa temperature est de "+integer+" degre Celsius";
     }
 }

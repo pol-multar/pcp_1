@@ -8,6 +8,8 @@ public class Main {
 
     public static void main(String[] args) {
 
+        //Mur en granite
+
         debug=true;
 
         InsulatedWall myWall = new InsulatedWall();

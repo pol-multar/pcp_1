@@ -47,28 +47,27 @@ public class InsulatedWall {
     /**
      * Mérhode d'initialisation du mur
      * @param wallCompos le type de materiaux composant le mur
-     * @param insulation le type de materiaux composant l'isolant
+     * @param insulationCompos le type de materiaux composant l'isolant
      */
-    private void initWall(Material wallCompos, Material insulation) {
+    private void initWall(Material wallCompos, Material insulationCompos) {
 
         wallParts= new ArrayList<WallPart>();
         wallPartNumber=(wallLength/wallCompos.getLength());
-        insulationPartNumber=(insulationLength/insulation.getLength());
+        insulationPartNumber=(insulationLength/insulationCompos.getLength());
 
-        int cpt;
 
         /* Je construit le mur */
-        for (cpt = 0; cpt < wallPartNumber; cpt++) {
-            wallParts.add(cpt, new WallPart(Constantes.T0,wallCompos));
-        }
+      for (int cpt = 0; cpt < wallPartNumber; cpt++) {
+           wallParts.add(new WallPart(Constantes.T0,wallCompos));
+       }
 
         /* Je construis l'isolant */
-        for (cpt = wallPartNumber; cpt < wallPartNumber+insulationPartNumber; cpt++) {
-            wallParts.add(cpt, new WallPart(Constantes.T0,insulation));
+        for (int cpt = wallPartNumber+1; cpt < wallPartNumber+insulationPartNumber+1; cpt++) {
+            wallParts.add(new WallPart(Constantes.T0,insulationCompos));
         }
 
         this.wall=wallCompos;
-        this.insulation=insulation;
+        this.insulation=insulationCompos;
 
         /* La première partie du mur suit la loi de commande, ici Cte à 110 °C */
         wallParts.get(0).setTemp(Constantes.OUTSIDETEMP);
@@ -108,8 +107,8 @@ public class InsulatedWall {
         walls+=wallPart.toString()+"\n";
         }
 
-        return "mur de "+ insulatedWallLength + " centimetres.\n"
-                + "Il est compose sur sa face exterieure de "+wall+" et sur sa face intérieure de "+insulation+".\n"
+        return "Mur de "+ insulatedWallLength + " centimetres.\n"
+                + "Il est compose sur sa face exterieure de "+wall+"\n"+"et sur sa face intérieure de "+insulation+".\n"
                 + walls;
     }
 

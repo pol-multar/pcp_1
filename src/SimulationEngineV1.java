@@ -7,40 +7,49 @@ import java.util.ArrayList;
  */
 public class SimulationEngineV1 {
 
-    private InsulatedWall insulatedWall;
-    private double outsideTemp;
-    private double insideTemp;
+    //Le mur que l'on va etudier
+    //private InsulatedWall insulatedWall;
     private int _t;
+    //Le C du materiau composant le mur
     private double wallC;
+    //Le C du materiau composant l'isolant du mur
     private double insulationC;
-    private ArrayList<Material> wallComponents;
-    private ArrayList<Material> insulationComponents;
-    private Boolean debug;
+    //L'etape ou la temperature a change
     private int stepOfChange;
+    //Savoir
     private boolean isChanged;
     private int execTime;
+
+    //Le tableau qui contiendra les temperatures prochaines du mur
+    private double [] nextTemp;
+
+    //Le tableau qui contiendra les temperatures actuelles du mur
+    private double [] currentTemp;
 
     /**
      * Constructeur de la classe simulation
      *
      * @param wall le mur dont on souhaite etudier l'evolution de temperature
      */
-    public SimulationEngineV1(InsulatedWall wall) {
-        this.insulatedWall = wall;
-        this.outsideTemp = Constantes.OUTSIDETEMP;
-        this.insideTemp = Constantes.INSIDETEMP;
+
+    /**
+     * Constructeur de la classe simulation
+     * @param wallCompos le materiau utilise pour composer le mur
+     * @param insolationCompos le materiau utilise pour isoler le mur
+     */
+    public SimulationEngineV1(Material wallCompos, Material insolationCompos) {
+        this.currentTemp= new double [9];
+        this.nextTemp= new double[9];
+        this.wallC = calculateC(wallCompos);
+        this.insulationC = calculateC(insolationCompos);
+
         this._t = 0;
         this.stepOfChange = 0;
-        this.wallC = calculateC(insulatedWall.getWall());
-        this.insulationC = calculateC(insulatedWall.getInsulation());
-        this.wallComponents = new ArrayList<>();
-        this.insulationComponents = new ArrayList<>();
-        wallComponents.add(Material.BRICK);
-        wallComponents.add(Material.GRANITE);
-        insulationComponents.add(Material.GLASSWOOL);
         isChanged = false;
         this.execTime = 0;
+
     }
+
 
 
     /**
@@ -78,16 +87,16 @@ public class SimulationEngineV1 {
             e.printStackTrace();
         }
         //Envoi de l'etat initial du mur
-        for (int i = 0; i < insulatedWall.getWallParts().size(); i++) {
-            String message = "<elt><time>" + 0 + "</time><X>" + i + "</X><value>" + insulatedWall.getWallParts().get(i).getAskedTemp() + "</value></elt>";
+        for (int i = 0; i < currentTemp.length; i++) {
+            String message = "<elt><time>" + 0 + "</time><X>" + i + "</X><value>" + currentTemp[i] + "</value></elt>";
             JavaWebSocketServer.getInstance().broadcastMessage(message);
         }
 
         //Envoi de l'evolution du mur
-        for (int i = 1; i < 200; i++) {
+        for (int i = 1; i < 199; i++) {
             oneStep();
-            for (int j = 0; j < insulatedWall.getWallParts().size(); j++) {
-                String message = "<elt><time>" + i + "</time><X>" + j + "</X><value>" + insulatedWall.getWallParts().get(j).getAskedTemp() + "</value></elt>";
+            for (int j = 0; j < currentTemp.length; j++) {
+                String message = "<elt><time>" + i + "</time><X>" + j + "</X><value>" + currentTemp[j] + "</value></elt>";
                 JavaWebSocketServer.getInstance().broadcastMessage(message);
             }
         }
@@ -102,35 +111,24 @@ public class SimulationEngineV1 {
         long timeBegin = System.currentTimeMillis();
 
         /**
-         * La première et la dernière partie du mur sont des constantes
+         * La premiere et la dernière partie du mur sont des constantes,
+         * on ne va donc pas modifier leur valeur de temperature
          */
-        for (int i = 1; i < insulatedWall.getWallParts().size() - 1; i++) {
 
-            double theBigC;
-
-            if (this.wallComponents.contains(insulatedWall.getWallParts().get(i).getCompos())) {
-                theBigC = wallC;
-            } else {
-                theBigC = insulationC;
-            }
-
-            updateWallPartTemp(insulatedWall.getWallParts().get(i - 1), insulatedWall.getWallParts().get(i), insulatedWall.getWallParts().get(i + 1), theBigC);
-
+        /* Etape 1 : modification des parties du mur composees du premier materiau, soit les parties 1 a 4 */
+        for (int i = 1; i < 5; i++) {
+            nextTemp[i]=updateWallPartTemp(currentTemp[i-1], currentTemp[i], currentTemp[i+1], this.wallC);
         }
+//TODO corriger la suite
 
-        //Etape 3 : Calculer pour la dernière partie du mur
+        /* Etape 2 : modification de la temperature de la partie du milieu, soit la partie 5 */
 
-        int lastPart = insulatedWall.getWallParts().size() - 1;
+        /* Etape 3 : modification de la temperature des dernieres parties du mur, soit les parties 6 et 7 */
 
-        updateWallPartTemp(insulatedWall.getWallParts().get(lastPart - 1), insulatedWall.getWallParts().get(lastPart), new WallPart(insideTemp, Material.GLASSWOOL), insulationC);
-
-        insideTemp = insulatedWall.getWallParts().get(lastPart).getTemp();
-
-
-        if (insulatedWall.getWallParts().get(lastPart).getAskedTemp() > 20 && isChanged == false) {
+        /*if (insulatedWall.getWallParts().get(lastPart).getAskedTemp() > 20 && isChanged == false) {
             stepOfChange = _t;
             isChanged = true;
-        }
+        }*/
 
         //Le cycle est termine
         _t++;
@@ -148,15 +146,10 @@ public class SimulationEngineV1 {
      * @param nextPart     la partie de mur suivante
      * @param bigC         la constante C relative au materiau composant la partie de mur courrante
      */
-    private void updateWallPartTemp(WallPart previousPart, WallPart currentPart, WallPart nextPart, double bigC) {
+    private double updateWallPartTemp(double previousPart, double currentPart, double nextPart, double bigC) {
 
-        double currentPartTemp = Constantes.toKelvin(currentPart.getTemp());
-        double previousPartTemp = Constantes.toKelvin(previousPart.getTemp());
-        double nextPartTemp = Constantes.toKelvin(nextPart.getTemp());
+        return currentPart + bigC * (nextPart + previousPart - 2 * (currentPart));
 
-        double newTemp = currentPartTemp + bigC * (nextPartTemp + previousPartTemp - 2 * (currentPartTemp));
-
-        currentPart.setTemp(Constantes.toCelsius(newTemp));
     }
 
 
@@ -168,8 +161,8 @@ public class SimulationEngineV1 {
      */
     private double calculateC(Material material) {
 
-        double grandC = (material.getLambda() * Constantes.DT) / (material.getMu() * material.getC() * Constantes.DX * Constantes.DX);
-        return grandC;
+        double bigC = (material.getLambda() * Constantes.DT) / (material.getMu() * material.getC() * Constantes.DX * Constantes.DX);
+        return bigC;
 
     }
 

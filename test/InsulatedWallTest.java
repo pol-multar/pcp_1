@@ -43,7 +43,6 @@ public class InsulatedWallTest {
         assertEquals(8,wall1.getWallPartNumber()+wall1.getInsulationPartNumber());
     }
 
-    //@Ignore("not ready yet")
     @Test
     public void testWallContent() {
         ArrayList<WallPart> al = wall1.getWallParts();
