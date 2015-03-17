@@ -1,8 +1,5 @@
-package data;
 
 import java.util.ArrayList;
-
-import static data.Constantes.*;
 
 
 /**
@@ -16,7 +13,12 @@ public class InsulatedWall {
     //Epaisseur de l'isolant en centimetres
     private static final int insulationLength = 12;
     //Epaisseur totale mur+isolant
-    public static final int insulatedWallLength = wallLength + insulationLength;
+    private static final int insulatedWallLength = wallLength + insulationLength;
+
+    //Nombre de partie du mur en fonction de l'epaisseur totale
+    private int wallPartNumber;
+    //Nombre de partie de l'isolant en fonction de l'epaisseur totale
+    private int insulationPartNumber;
 
     private ArrayList<WallPart> wallParts;
 
@@ -50,22 +52,29 @@ public class InsulatedWall {
     private void initWall(Material wallCompos, Material insulation) {
 
         wallParts= new ArrayList<WallPart>();
+        wallPartNumber=(wallLength/wallCompos.getLength());
+        insulationPartNumber=(insulationLength/insulation.getLength());
 
         int cpt;
 
         /* Je construit le mur */
-        for (cpt = 0; cpt < wallLength/wallCompos.getLength(); cpt++) {
-            wallParts.add(cpt, new WallPart(T0,wallCompos));
+        for (cpt = 0; cpt < wallPartNumber; cpt++) {
+            wallParts.add(cpt, new WallPart(Constantes.T0,wallCompos));
         }
 
         /* Je construis l'isolant */
-        for (cpt = wallLength/wallCompos.getLength(); cpt < insulatedWallLength/insulation.getLength(); cpt++) {
-            wallParts.add(cpt, new WallPart(T0,insulation));
+        for (cpt = wallPartNumber; cpt < wallPartNumber+insulationPartNumber; cpt++) {
+            wallParts.add(cpt, new WallPart(Constantes.T0,insulation));
         }
 
         this.wall=wallCompos;
         this.insulation=insulation;
 
+        /* La première partie du mur suit la loi de commande, ici Cte à 110 °C */
+        wallParts.get(0).setTemp(Constantes.OUTSIDETEMP);
+
+        /* La dernière partie du mur reste à 20°C */
+        wallParts.get(wallParts.size()-1).setTemp(Constantes.INSIDETEMP);
 
     }
 
@@ -80,6 +89,14 @@ public class InsulatedWall {
     public Material getInsulation() {
 
         return insulation;
+    }
+
+    public int getWallPartNumber() {
+        return wallPartNumber;
+    }
+
+    public int getInsulationPartNumber() {
+        return insulationPartNumber;
     }
 
     @Override

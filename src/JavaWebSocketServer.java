@@ -1,13 +1,11 @@
-package WebSocketServer;
-
-import java.util.HashSet;
-import java.util.Set;
-import java.util.concurrent.ExecutionException;
-
 import org.webbitserver.WebServer;
 import org.webbitserver.WebServers;
 import org.webbitserver.WebSocketConnection;
 import org.webbitserver.handler.StaticFileHandler;
+
+import java.util.HashSet;
+import java.util.Set;
+import java.util.concurrent.ExecutionException;
 
 
 public class JavaWebSocketServer {

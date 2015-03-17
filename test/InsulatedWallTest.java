@@ -1,5 +1,3 @@
-package data;
-
 
 import org.junit.After;
 import org.junit.Before;
@@ -17,7 +15,6 @@ import static junit.framework.Assert.assertEquals;
 public class InsulatedWallTest {
     private InsulatedWall wall1, wall2, wall3;
 
-
     public InsulatedWallTest() {
     }
 
@@ -29,7 +26,6 @@ public class InsulatedWallTest {
         wall1 = new InsulatedWall();
         wall2 = new InsulatedWall(Material.GRANITE, Material.GLASSWOOL);
         wall3 = new InsulatedWall(Material.GLASSWOOL, Material.GLASSWOOL);
-
     }
 
     @After
@@ -39,32 +35,35 @@ public class InsulatedWallTest {
         wall3 = null;
     }
 
-
     @Test
     public void testWallLength() {
         assertEquals(8, wall1.getWallParts().size());
         assertEquals(8, wall2.getWallParts().size());
         assertEquals(8, wall3.getWallParts().size());
+        assertEquals(8,wall1.getWallPartNumber()+wall1.getInsulationPartNumber());
     }
 
     //@Ignore("not ready yet")
     @Test
-    public void testWallContent(){
-        ArrayList<WallPart> al=wall1.getWallParts();
-        testAlContent(Material.BRICK,Material.GLASSWOOL,al);
-        al=wall2.getWallParts();
-        testAlContent(Material.GRANITE,Material.GLASSWOOL,al);
-        al=wall3.getWallParts();
-        testAlContent(Material.GLASSWOOL,Material.GLASSWOOL,al);
-
+    public void testWallContent() {
+        ArrayList<WallPart> al = wall1.getWallParts();
+        testAlContent(Material.BRICK, Material.GLASSWOOL, al);
+        al = wall2.getWallParts();
+        testAlContent(Material.GRANITE, Material.GLASSWOOL, al);
+        al = wall3.getWallParts();
+        testAlContent(Material.GLASSWOOL, Material.GLASSWOOL, al);
     }
 
-    private void testAlContent(Material wall, Material insulation,ArrayList<WallPart> al){
-        assertEquals(wall,al.get(0).getCompos());
-        assertEquals(wall,al.get(4).getCompos());
-        assertEquals(insulation,al.get(5).getCompos());
-        assertEquals(insulation,al.get(7).getCompos());
+    private void testAlContent(Material wall, Material insulation, ArrayList<WallPart> al) {
+        assertEquals(wall, al.get(0).getCompos());
+        assertEquals(wall, al.get(4).getCompos());
+        assertEquals(insulation, al.get(5).getCompos());
+        assertEquals(insulation, al.get(7).getCompos());
     }
 
+    @Test
+    public void testWallTemp() {
+        assertEquals(Constantes.OUTSIDETEMP, wall1.getWallParts().get(0).getTemp());
+        assertEquals(Constantes.INSIDETEMP, wall1.getWallParts().get(wall1.getWallParts().size() - 1).getTemp());
+    }
 }
-

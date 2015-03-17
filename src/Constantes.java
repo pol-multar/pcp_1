@@ -1,5 +1,3 @@
-package data;
-
 /**
  * @author Maxime
  * @version 17/02/2015.
@@ -34,7 +32,7 @@ public class Constantes {
     //Pas de temps (secondes)
     public static final int DT=1;
 
-    //Pas de distance (m)
+    //Pas d'espace (m)
     public static final double DX=0.02;
 
     /**

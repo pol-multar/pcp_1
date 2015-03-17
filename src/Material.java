@@ -1,16 +1,11 @@
-package data;
-
-import java.util.Objects;
-import static data.Constantes.*;
-
 /**
  * @author mmultari
  * @version 24/02/2015
  */
 public enum Material {
-    GLASSWOOL("Laine de verre",GLASSWOOLLAMBDA,GLASSWOOLMU,GLASSWOOLC),
-    BRICK("Brique",BRICKLAMBDA,BRICKMU,BRICKC),
-    GRANITE("Granite",GRANITELAMBDA,GRANITEMU,GRANITEC);
+    GLASSWOOL("Laine de verre",Constantes.GLASSWOOLLAMBDA,Constantes.GLASSWOOLMU,Constantes.GLASSWOOLC),
+    BRICK("Brique",Constantes.BRICKLAMBDA,Constantes.BRICKMU,Constantes.BRICKC),
+    GRANITE("Granite",Constantes.GRANITELAMBDA,Constantes.GRANITEMU,Constantes.GRANITEC);
 
     private String name;
     private int length;
