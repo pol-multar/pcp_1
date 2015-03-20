@@ -52,9 +52,7 @@ public class SimulationEngine {
             currentTemp[i] = nextTemp[i] = Constantes.T0;
         }
         currentTemp[0] = nextTemp[0] = Constantes.OUTSIDETEMP;
-        //System.out.println("Valeur de current: " +currentTemp[0]+" valeur de next: "+nextTemp[0]);
         currentTemp[8] = nextTemp[8] = Constantes.INSIDETEMP;
-        //System.out.println("Valeur de current: " +currentTemp[8]+" valeur de next: "+nextTemp[8]);
     }
 
 
