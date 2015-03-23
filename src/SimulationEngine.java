@@ -41,11 +41,11 @@ public class SimulationEngine {
      * @param wallCompos       le materiau utilise pour composer le mur
      * @param insolationCompos le materiau utilise pour isoler le mur
      */
-    public SimulationEngine(Material wallCompos, Material insolationCompos) {
-        this(wallCompos, insolationCompos, 100000);
+    public SimulationEngine(Material wallCompos, Material insolationCompos,boolean debug) {
+        this(wallCompos, insolationCompos, 100000,debug);
     }
 
-    public SimulationEngine(Material wallCompos, Material insolationCompos, int nbStep){
+    public SimulationEngine(Material wallCompos, Material insolationCompos, int nbStep, boolean debug){
         this.currentTemp = new double[9];
         this.nextTemp = new double[9];
         this.wallC = calculateC(wallCompos);
@@ -54,11 +54,12 @@ public class SimulationEngine {
         this.stepOfChange = 0;
         isChanged = false;
         this.execTime = 0;
-
+        this.debug=debug;
         this.nbStep=nbStep;
-        this.debug=true;
         initWall();
     }
+
+
 
     private void initWall() {
         for (int i = 0; i < currentTemp.length - 1; i++) {
@@ -70,38 +71,22 @@ public class SimulationEngine {
 
 
     /**
-     * Methode permettant d'executer la simulation avec un nombre de cycle choisi
-     *
-     * @param step le nombre de cycles choisit
-     */
-    public void runYourSimulation(int step) {
-        for (int i = 0; i < step; i++) {
-            oneStep();
-            displayTenFirstHours();
-        }
-    }
-
-    /**
      * Methode permettant d'executer la simulation avec 100000 cycles
      */
-    public void runLongSimulation() {
-        for (int i = 0; i < 100000; i++) {
+    public void runMonoThreadSimulation() {
+        for (int i = 0; i < this.nbStep; i++) {
             oneStep();
-            displayTenFirstHours();
+            displayResults();
         }
     }
 
 
-    public void runMultiThreadSimulation(int steps) {
-        if(debug) {
+    public void runMultiThreadSimulation() {
             barrier = new CyclicBarrier(8);//7 threads + 1 pour l'affichage
             new Thread(new ToDisplay(this)).start();
-        }else {
-            barrier = new CyclicBarrier(7);
-        }
 
         for (int i = 1; i < currentTemp.length-1; i++) {
-            new Thread(new RunSimulation(this, i, steps)).start();
+            new Thread(new RunSimulation(this, i, nbStep)).start();
             //System.out.println("Lancement du Thread"+i);
         }
 
@@ -267,10 +252,17 @@ public class SimulationEngine {
         return nbStep;
     }
 
-    public void displayTenFirstHours(){
+    private void displayTenFirstHours(){
         if((this.get_t()%6)==0 &&(this.get_t()<61) && (this.get_t()>0)) {
             System.out.println(this);
         }
+    }
+
+    public void displayResults(){
+
+        if(debug)
+            displayTenFirstHours();
+
         if (this.get_t() == this.getNbStep() - 1) {
             System.out.println("Changement a partir de l'etape " + this.getStepOfChange()
                     + " soit après " + (this.getStepOfChange() * 600) / 3600 + " heure(s)");
@@ -333,7 +325,7 @@ class ToDisplay implements Runnable{
 
             //System.out.println("Ecriture terminee on affiche");
 
-            se.displayTenFirstHours();
+            se.displayResults();
         }
     }
 
