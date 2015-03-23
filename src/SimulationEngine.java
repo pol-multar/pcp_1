@@ -1,4 +1,3 @@
-import java.util.ArrayList;
 import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CyclicBarrier;
 
@@ -33,6 +32,9 @@ public class SimulationEngine {
     //Le nombre d'itération de la simulation
     int nbStep;
 
+    //mode avec affichage
+    boolean debug;
+
     /**
      * Constructeur de la classe simulation
      *
@@ -52,8 +54,9 @@ public class SimulationEngine {
         this.stepOfChange = 0;
         isChanged = false;
         this.execTime = 0;
-        barrier = new CyclicBarrier(7);//7 threads car 7 capteurs
+
         this.nbStep=nbStep;
+        this.debug=true;
         initWall();
     }
 
@@ -74,7 +77,7 @@ public class SimulationEngine {
     public void runYourSimulation(int step) {
         for (int i = 0; i < step; i++) {
             oneStep();
-            System.out.println(this);
+            displayTenFirstHours();
         }
     }
 
@@ -84,16 +87,24 @@ public class SimulationEngine {
     public void runLongSimulation() {
         for (int i = 0; i < 100000; i++) {
             oneStep();
-            System.out.println(this);
+            displayTenFirstHours();
         }
     }
 
 
     public void runMultiThreadSimulation(int steps) {
+        if(debug) {
+            barrier = new CyclicBarrier(8);//7 threads + 1 pour l'affichage
+            new Thread(new ToDisplay(this)).start();
+        }else {
+            barrier = new CyclicBarrier(7);
+        }
+
         for (int i = 1; i < currentTemp.length-1; i++) {
             new Thread(new RunSimulation(this, i, steps)).start();
             //System.out.println("Lancement du Thread"+i);
         }
+
     }
 
     /**
@@ -256,9 +267,22 @@ public class SimulationEngine {
         return nbStep;
     }
 
+    public void displayTenFirstHours(){
+        if((this.get_t()%6)==0 &&(this.get_t()<61) && (this.get_t()>0)) {
+            System.out.println(this);
+        }
+        if (this.get_t() == this.getNbStep() - 1) {
+            System.out.println("Changement a partir de l'etape " + this.getStepOfChange()
+                    + " soit après " + (this.getStepOfChange() * 600) / 3600 + " heure(s)");
+            System.out.println("Temps d'execution de la simulation : " + this.getExecTime() + " ms");
+        }
+    }
+
     @Override
     public String toString() {
-        String toReturn = "t=" + _t * Constantes.DT + " seconde(s) ";
+        int hour=((_t) * Constantes.DT)/3600;
+
+        String toReturn = "t=" + hour + " heure(s) ";
 
         for (int i = 0; i < 5; i++) {
             toReturn += Constantes.toInt(currentTemp[i]) + ",";
@@ -272,20 +296,23 @@ public class SimulationEngine {
     }
 }
 
-class toDisplay implements Runnable{
+class ToDisplay implements Runnable{
 
     private SimulationEngine se;
+    private int lastStep;
 
-    public toDisplay(SimulationEngine simulationEngine){
+    public ToDisplay(SimulationEngine simulationEngine){
         this.se=simulationEngine;
+        this.lastStep=se.get_t();
     }
-
-
-    //TODO corriger
 
     @Override
     public void run() {
-        for (int i = 0; i <se.getNbStep() ; i++) {
+
+        int cpt;
+
+        for(cpt=0;cpt < se.getNbStep();cpt++) {
+/* On attend le calcul des nouvelles temperatures */
             try {
                 se.getBarrier().await();
             } catch (InterruptedException e) {
@@ -293,7 +320,9 @@ class toDisplay implements Runnable{
             } catch (BrokenBarrierException e) {
                 e.printStackTrace();
             }
-            //System.out.println("Main : fin des calculs de l'etape "+i+" attente de l'ecriture de la mise a jour");
+
+        /* On attend l ecriture des nouvelles temperatures */
+
             try {
                 se.getBarrier().await();
             } catch (InterruptedException e) {
@@ -301,7 +330,13 @@ class toDisplay implements Runnable{
             } catch (BrokenBarrierException e) {
                 e.printStackTrace();
             }
-            //System.out.println(mySimu);
+
+            //System.out.println("Ecriture terminee on affiche");
+
+            se.displayTenFirstHours();
         }
     }
+
+
+
 }
