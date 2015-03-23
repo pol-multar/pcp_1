@@ -17,27 +17,8 @@ public class Main {
         if (debug) System.out.println(mySimu);
         int nbStep=100000;
         mySimu.runMultiThreadSimulation(nbStep);
-
-        for (int i = 0; i <nbStep ; i++) {
-            try {
-                mySimu.getBarrier().await();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            } catch (BrokenBarrierException e) {
-                e.printStackTrace();
-            }
-            //System.out.println("Main : fin des calculs de l'etape "+i+" attente de l'ecriture de la mise a jour");
-            try {
-                mySimu.getBarrier().await();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            } catch (BrokenBarrierException e) {
-                e.printStackTrace();
-            }
-            System.out.println(mySimu);
-        }
-
-        System.out.println("Changement a partir de l'etape " + mySimu.getStepOfChange());
+        System.out.println("Changement a partir de l'etape " + mySimu.getStepOfChange()
+                + " soit après " +(mySimu.getStepOfChange()*600)/3600+" heure(s)");
         System.out.println("Temps d'execution de la simulation : " + mySimu.getExecTime() + " ms");
 
     }

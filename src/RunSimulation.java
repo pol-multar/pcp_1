@@ -1,6 +1,7 @@
 import java.util.concurrent.BrokenBarrierException;
 
 /**
+ * Classe chargée d'implémenter les calculs en multithread avec une barrière
  * @author mmultari
  * @version 17/03/2015
  */
@@ -10,21 +11,32 @@ public class RunSimulation implements Runnable {
     private SimulationEngine simulation;
     private int stepsNumber;
 
+    /**
+     * Le constructeur de la classe
+     * @param simulation les données de la simulation
+     * @param number le numéro associé au thread
+     * @param steps le nombre de cycles de la simulation
+     */
     public RunSimulation(SimulationEngine simulation, int number, int steps) {
         this.partNb = number;
         this.simulation = simulation;
         this.stepsNumber = steps;
     }
 
+    /**
+     * La méthode principale du thread
+     */
     @Override
     public void run() {
         int cpt=0;
         int execTime=0;
+        double newTemp;
+        long timeBegin;
         //System.out.println("A l'interieur du thread responsable de la partie "+partNb+" avant le for");
 
         for(cpt=0;cpt < stepsNumber;cpt++) {
-            double newTemp;
-            long timeBegin = System.currentTimeMillis();
+
+            timeBegin = System.currentTimeMillis();
 
             //System.out.println(partNb+" debut de l etape "+cpt);
             if (partNb < 5) {
@@ -59,8 +71,7 @@ public class RunSimulation implements Runnable {
             if(simulation.get_t()<cpt)simulation.set_t(cpt);
 
             if(partNb==1) {
-                long timeEnd = System.currentTimeMillis();
-                execTime += (int) (timeEnd - timeBegin);
+                execTime += (int) (System.currentTimeMillis() - timeBegin);
                 simulation.setExecTime(execTime);
             }
 

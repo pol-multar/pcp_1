@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CyclicBarrier;
 
 
@@ -26,7 +27,11 @@ public class SimulationEngine {
     //Le tableau qui contiendra les temperatures actuelles du mur
     private double[] currentTemp;
 
+    //La barrière utilisée en multithread
     CyclicBarrier barrier;
+
+    //Le nombre d'itération de la simulation
+    int nbStep;
 
     /**
      * Constructeur de la classe simulation
@@ -35,6 +40,10 @@ public class SimulationEngine {
      * @param insolationCompos le materiau utilise pour isoler le mur
      */
     public SimulationEngine(Material wallCompos, Material insolationCompos) {
+        this(wallCompos, insolationCompos, 100000);
+    }
+
+    public SimulationEngine(Material wallCompos, Material insolationCompos, int nbStep){
         this.currentTemp = new double[9];
         this.nextTemp = new double[9];
         this.wallC = calculateC(wallCompos);
@@ -43,7 +52,8 @@ public class SimulationEngine {
         this.stepOfChange = 0;
         isChanged = false;
         this.execTime = 0;
-        barrier = new CyclicBarrier(8);//7 threads+le main
+        barrier = new CyclicBarrier(7);//7 threads car 7 capteurs
+        this.nbStep=nbStep;
         initWall();
     }
 
@@ -82,7 +92,7 @@ public class SimulationEngine {
     public void runMultiThreadSimulation(int steps) {
         for (int i = 1; i < currentTemp.length-1; i++) {
             new Thread(new RunSimulation(this, i, steps)).start();
-            System.out.println("Lancement du Thread"+i);
+            //System.out.println("Lancement du Thread"+i);
         }
     }
 
@@ -242,9 +252,14 @@ public class SimulationEngine {
         this.execTime = execTime;
     }
 
+    public int getNbStep() {
+        return nbStep;
+    }
+
     @Override
     public String toString() {
-        String toReturn = "t=" + _t * 600 + " seconde(s) ";
+        String toReturn = "t=" + _t * Constantes.DT + " seconde(s) ";
+
         for (int i = 0; i < 5; i++) {
             toReturn += Constantes.toInt(currentTemp[i]) + ",";
         }
@@ -254,5 +269,39 @@ public class SimulationEngine {
         }
         toReturn += Constantes.toInt(currentTemp[8]);
         return toReturn;
+    }
+}
+
+class toDisplay implements Runnable{
+
+    private SimulationEngine se;
+
+    public toDisplay(SimulationEngine simulationEngine){
+        this.se=simulationEngine;
+    }
+
+
+    //TODO corriger
+
+    @Override
+    public void run() {
+        for (int i = 0; i <se.getNbStep() ; i++) {
+            try {
+                se.getBarrier().await();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            } catch (BrokenBarrierException e) {
+                e.printStackTrace();
+            }
+            //System.out.println("Main : fin des calculs de l'etape "+i+" attente de l'ecriture de la mise a jour");
+            try {
+                se.getBarrier().await();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            } catch (BrokenBarrierException e) {
+                e.printStackTrace();
+            }
+            //System.out.println(mySimu);
+        }
     }
 }
