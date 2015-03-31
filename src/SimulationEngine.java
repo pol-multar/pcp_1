@@ -301,6 +301,8 @@ class ToDisplay implements Runnable{
     @Override
     public void run() {
 
+        //TODO vrai faux
+
         int cpt;
 
         for(cpt=0;cpt < se.getNbStep();cpt++) {
