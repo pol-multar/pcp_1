@@ -7,8 +7,11 @@ import java.util.concurrent.BrokenBarrierException;
  */
 public class RunSimulation implements Runnable {
 
+    //Le numero du mur dont est charge le thread
     private int partNb;
+    //Les donnes de la simulation
     private SimulationEngine simulation;
+    //Le nombre d etape de la simulation
     private int stepsNumber;
 
     /**
@@ -32,13 +35,13 @@ public class RunSimulation implements Runnable {
         int execTime=0;
         double newTemp;
         long timeBegin;
-        //System.out.println("A l'interieur du thread responsable de la partie "+partNb+" avant le for");
 
-        for(cpt=0;cpt < stepsNumber;cpt++) {
+        for(cpt=0; cpt < stepsNumber; cpt++) {
 
+            //Je recupere l'heure de debut de ma methode
             timeBegin = System.currentTimeMillis();
 
-            //System.out.println(partNb+" debut de l etape "+cpt);
+            //Je calcule la nouvelle temperature de la partie du mur en fonction de sa position dans le tableau
             if (partNb < 5) {
                 newTemp = simulation.updateWallPartTemp(simulation.getCurrentTemp(partNb - 1), simulation.getCurrentTemp(partNb), simulation.getCurrentTemp(partNb + 1), simulation.getWallC());
             } else if (partNb > 5) {
@@ -47,14 +50,19 @@ public class RunSimulation implements Runnable {
                 newTemp = simulation.getCurrentTemp(partNb) + simulation.getWallC() * (simulation.getCurrentTemp(partNb - 1) - simulation.getCurrentTemp(partNb)) + simulation.getInsulationC() * (simulation.getCurrentTemp(partNb + 1) - simulation.getCurrentTemp(partNb));
             }
 
+            /* Si je suis la derniere couche et que ma nouvelle temperature vaut 20
+             * Alors je le notifie a la simulation et je sauvegarde le numero de l'etape dans laquelle je me trouve
+             */
             if(partNb==7){
-                if(Constantes.toInt(newTemp)>20 && simulation.isChanged()==false){
+                if(SimulationEngine.toInt(newTemp)>20 && simulation.isChanged()==false){
                     simulation.setChanged(true);
                     simulation.setStepOfChange(cpt);
                 }
             }
 
-            //System.out.println(partNb+" : J ai fini mon calcul, attente des autres threads");
+            /* J ai fini mon calcul, j'attends que les autres threads aient finies elles aussi
+             * a l'aide de la cyclicBarrier de la simulation
+             */
 
             try {
                 simulation.getBarrier().await();
@@ -64,11 +72,14 @@ public class RunSimulation implements Runnable {
                 e.printStackTrace();
             }
 
-            //System.out.println(partNb+" : Les autres ont fini, je vais modifier les temperatures");
+            //Je met a jour la temperature dans le tableau de la simulation
 
             simulation.updateCurrentTemp(newTemp, partNb);
 
-            if(simulation.get_t()<cpt)simulation.set_t(cpt);
+            //Je met a jour le numero d etape de la simulation
+
+            if(simulation.getSimulationStepActualNumber()<cpt)simulation.setSimulationStepActualNumber(cpt);
+
 
             if(partNb==1) {
                 execTime += (int) (System.currentTimeMillis() - timeBegin);

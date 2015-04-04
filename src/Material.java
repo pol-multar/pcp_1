@@ -1,14 +1,15 @@
 /**
+ * Enum des differents types de materiaux possible pour le mur
  * @author mmultari
  * @version 24/02/2015
  */
 public enum Material {
-    GLASSWOOL("laine de verre", Constantes.GLASSWOOLLAMBDA, Constantes.GLASSWOOLMU, Constantes.GLASSWOOLC),
-    BRICK("brique", Constantes.BRICKLAMBDA, Constantes.BRICKMU, Constantes.BRICKC),
-    GRANITE("granite", Constantes.GRANITELAMBDA, Constantes.GRANITEMU, Constantes.GRANITEC);
+
+    GLASSWOOL("laine de verre", 0.04, 30, 900),
+    BRICK("brique", 0.84, 1400, 840),
+    GRANITE("granite", 2.2, 2700, 790);
 
     private String name;
-    private int length;
     private double lambda;
     private double mu;
     private double c;
@@ -23,14 +24,9 @@ public enum Material {
      */
     Material(String name, double lambda, double mu, double c) {
         this.name = name;
-        this.length = 4;
         this.lambda = lambda;
         this.mu = mu;
         this.c = c;
-    }
-
-    public int getLength() {
-        return this.length;
     }
 
     public String getName() {
@@ -50,7 +46,7 @@ public enum Material {
     }
 
     public String toString() {
-        return "materiau de " + name + " de largeur " + length;
+        return "materiau de " + name;
     }
 
 }

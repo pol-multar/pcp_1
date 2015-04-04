@@ -16,12 +16,10 @@ public class Main {
 
         if(args.length==1){
             debug = true;
-            mySimu = new SimulationEngine(Material.BRICK, Material.GLASSWOOL,debug);
         }else{
             debug = false;
-             mySimu = new SimulationEngine(Material.BRICK, Material.GLASSWOOL,debug);
         }
-
+        mySimu = new SimulationEngine(Material.BRICK, Material.GLASSWOOL,debug);
         if (debug) System.out.println(mySimu);
         mySimu.runMultiThreadSimulation();
         //mySimu.runMonoThreadSimulation();

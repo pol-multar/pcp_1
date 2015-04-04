@@ -8,7 +8,26 @@ import java.util.concurrent.CyclicBarrier;
  */
 public class SimulationEngine {
 
-    private int _t;
+    /* Constantes necessaires a la simulation */
+
+
+    //Temperatures en degré celsius
+    private static final double T0 = 20;
+    private static final double OUTSIDETEMP = 110;
+    private static final double INSIDETEMP = 20;
+
+    //Pas de temps (secondes)
+    //public static final int DT=1;
+    private static final int DT = 600;
+
+    //Pas d'espace (m)
+    //public static final double DX=0.02;
+    private static final double DX = 0.04;
+
+    /* Attributs de la classe */
+
+    //Contient le numero de l'etape courante
+    private int simulationStepActualNumber;
     //Le C du materiau composant le mur
     private double wallC;
     //Le C du materiau composant l'isolant du mur
@@ -36,21 +55,29 @@ public class SimulationEngine {
     boolean debug;
 
     /**
-     * Constructeur de la classe simulation
+     * Constructeur de la classe SimulationEngine avec 100 000 iterations
      *
      * @param wallCompos       le materiau utilise pour composer le mur
      * @param insolationCompos le materiau utilise pour isoler le mur
+     * @param debug pour savoir si l'on doit afficher les etapes ou seulement le resultat final
      */
     public SimulationEngine(Material wallCompos, Material insolationCompos,boolean debug) {
         this(wallCompos, insolationCompos, 100000,debug);
     }
 
+    /**
+     * Constructeur de la classe SimulationEngine
+     * @param wallCompos le materiau utilise pour composer le mur
+     * @param insolationCompos le materiau utilise pour isoler le mur
+     * @param nbStep le nombre d'etape de la simulation
+     * @param debug pour savoir si l'on doit afficher les etapes ou seulement le resultat final
+     */
     public SimulationEngine(Material wallCompos, Material insolationCompos, int nbStep, boolean debug){
         this.currentTemp = new double[9];
         this.nextTemp = new double[9];
         this.wallC = calculateC(wallCompos);
         this.insulationC = calculateC(insolationCompos);
-        this._t = 0;
+        this.simulationStepActualNumber = 0;
         this.stepOfChange = 0;
         isChanged = false;
         this.execTime = 0;
@@ -60,13 +87,15 @@ public class SimulationEngine {
     }
 
 
-
+    /**
+     * Methode chargee d'initialiser le tableau de temperatures du mur
+     */
     private void initWall() {
         for (int i = 0; i < currentTemp.length - 1; i++) {
-            currentTemp[i] = nextTemp[i] = Constantes.T0;
+            currentTemp[i] = nextTemp[i] = T0;
         }
-        currentTemp[0] = nextTemp[0] = Constantes.OUTSIDETEMP;
-        currentTemp[8] = nextTemp[8] = Constantes.INSIDETEMP;
+        currentTemp[0] = nextTemp[0] = OUTSIDETEMP;
+        currentTemp[8] = nextTemp[8] = INSIDETEMP;
     }
 
 
@@ -75,7 +104,7 @@ public class SimulationEngine {
      */
     public void runMonoThreadSimulation() {
         for (int i = 0; i < this.nbStep; i++) {
-            oneStep();
+            oneStepMonoThread();
             displayResults();
         }
     }
@@ -92,40 +121,23 @@ public class SimulationEngine {
 
     }
 
-    /**
-     * Methode permettant d'envoyer les resultats de la simulation avec un websocket
-     */
+    public void oldRunMultiThreadSimulation() {
+        barrier = new CyclicBarrier(8);//7 threads + 1 pour l'affichage
+        new Thread(new ToDisplay(this)).start();
 
-   /* public void runWebSimulation() {
-
-        JavaWebSocketServer.getInstance();// Init the server
-
-        try {
-            Thread.sleep(10000);
-        } catch (InterruptedException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-        //Envoi de l'etat initial du mur
-        for (int i = 0; i < currentTemp.length; i++) {
-            String message = "<elt><time>" + 0 + "</time><X>" + i + "</X><value>" + currentTemp[i] + "</value></elt>";
-            JavaWebSocketServer.getInstance().broadcastMessage(message);
+        for (int i = 1; i < currentTemp.length-1; i++) {
+            new Thread(new RunSimulation(this, i, nbStep)).start();
+            //System.out.println("Lancement du Thread"+i);
         }
 
-        //Envoi de l'evolution du mur
-        for (int i = 1; i < 199; i++) {
-            oneStep();
-            for (int j = 0; j < currentTemp.length; j++) {
-                String message = "<elt><time>" + i + "</time><X>" + j + "</X><value>" + currentTemp[j] + "</value></elt>";
-                JavaWebSocketServer.getInstance().broadcastMessage(message);
-            }
-        }
-    }*/
+    }
+
 
     /**
      * Méthode représentant l'évolution de la temperature au cours d'un cycle
+     * en un seul thread
      */
-    private void oneStep() {
+    private void oneStepMonoThread() {
 
         long timeBegin = System.currentTimeMillis();
 
@@ -149,8 +161,8 @@ public class SimulationEngine {
             nextTemp[i] = updateWallPartTemp(currentTemp[i - 1], currentTemp[i], currentTemp[i + 1], this.insulationC);
         }
 
-        if (Constantes.toInt(nextTemp[7]) > 20 && isChanged == false) {
-            stepOfChange = _t;
+        if (toInt(nextTemp[7]) > 20 && !isChanged) {
+            stepOfChange = simulationStepActualNumber;
             isChanged = true;
         }
 
@@ -161,9 +173,84 @@ public class SimulationEngine {
         }
 
         //Le cycle est termine
-        _t++;
+        simulationStepActualNumber++;
         long timeEnd = System.currentTimeMillis();
         this.execTime += (int) (timeEnd - timeBegin);
+
+    }
+
+    private Runnable createRunnable(final int partNb){
+
+        return new Runnable(){
+            public void run(){
+                int cpt;
+                int execTime=0;
+                double newTemp;
+                long timeBegin;
+
+                for(cpt=0; cpt < getNbStep(); cpt++) {
+
+                    //Je recupere l'heure de debut de ma methode
+                    timeBegin = System.currentTimeMillis();
+
+                    //Je calcule la nouvelle temperature de la partie du mur en fonction de sa position dans le tableau
+                    if (partNb < 5) {
+                        newTemp = updateWallPartTemp(getCurrentTemp(partNb - 1), getCurrentTemp(partNb), getCurrentTemp(partNb + 1), getWallC());
+                    } else if (partNb > 5) {
+                        newTemp = updateWallPartTemp(getCurrentTemp(partNb - 1), getCurrentTemp(partNb), getCurrentTemp(partNb + 1), getInsulationC());
+                    } else {
+                        newTemp = getCurrentTemp(partNb) + getWallC() * (getCurrentTemp(partNb - 1) - getCurrentTemp(partNb)) + getInsulationC() * (getCurrentTemp(partNb + 1) - getCurrentTemp(partNb));
+                    }
+
+            /* Si je suis la derniere couche et que ma nouvelle temperature vaut 20
+             * Alors je le notifie a la simulation et je sauvegarde le numero de l'etape dans laquelle je me trouve
+             */
+                    if(partNb==7){
+                        if(SimulationEngine.toInt(newTemp)>20 && !isChanged()){
+                            setChanged(true);
+                            setStepOfChange(cpt);
+                        }
+                    }
+
+            /* J ai fini mon calcul, j'attends que les autres threads aient finies elles aussi
+             * a l'aide de la cyclicBarrier de la simulation
+             */
+
+                    try {
+                        getBarrier().await();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    } catch (BrokenBarrierException e) {
+                        e.printStackTrace();
+                    }
+
+                    //Je met a jour la temperature dans le tableau de la simulation
+
+                    updateCurrentTemp(newTemp, partNb);
+
+                    //Je met a jour le numero d etape de la simulation si ce n est pas deja fait
+
+                    if(getSimulationStepActualNumber()<cpt) setSimulationStepActualNumber(cpt);
+
+
+                    if(partNb==1) {
+                        execTime += (int) (System.currentTimeMillis() - timeBegin);
+                        setExecTime(execTime);
+                    }
+
+                    try {
+                        getBarrier().await();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    } catch (BrokenBarrierException e) {
+                        e.printStackTrace();
+                    }
+
+                }
+
+
+            }
+        };
 
     }
 
@@ -191,9 +278,47 @@ public class SimulationEngine {
      */
     private double calculateC(Material material) {
 
-        double bigC = (material.getLambda() * Constantes.DT) / (material.getMu() * material.getC() * Constantes.DX * Constantes.DX);
-        return bigC;
+        return (material.getLambda() * (double) DT) / (material.getMu() * material.getC() * DX * DX);
 
+    }
+
+    /**
+     * Methode chargee d'afficher les dix premieres heures de simulation
+     */
+    private void displayTenFirstHours(){
+        if((this.getSimulationStepActualNumber()%6)==0 &&(this.getSimulationStepActualNumber()<61) && (this.getSimulationStepActualNumber()>0)) {
+            System.out.println(this);
+        }
+    }
+
+    /**
+     * Methode chargee d' afficher le resultat de la simulation
+     */
+    public void displayResults(){
+
+        if(debug)
+            displayTenFirstHours();
+
+        if (this.getSimulationStepActualNumber() == this.getNbStep() - 1) {
+            System.out.println("Changement a partir de l'etape " + this.getStepOfChange()
+                    + " soit après " + (this.getStepOfChange() * 600) / 3600 + " heure(s)");
+            System.out.println("Temps d'execution de la simulation : " + this.getExecTime() + " ms");
+        }
+    }
+
+    /**
+     * Convertisseur de double vers int
+     * @param aDouble le double a convertir
+     * @return le resultat en int
+     */
+    public static int toInt(double aDouble) {
+        return Integer.valueOf((int) Math.round(aDouble));
+    }
+
+    /* Accesseurs en lecture et en ecriture */
+
+    public int getNbStep() {
+        return nbStep;
     }
 
     public int getStepOfChange() {
@@ -236,54 +361,32 @@ public class SimulationEngine {
         return barrier;
     }
 
-    public int get_t() {
-        return _t;
+    public int getSimulationStepActualNumber() {
+        return simulationStepActualNumber;
     }
 
-    public void set_t(int _t) {
-        this._t = _t;
+    public void setSimulationStepActualNumber(int simulationStepActualNumber) {
+        this.simulationStepActualNumber = simulationStepActualNumber;
     }
 
     public void setExecTime(int execTime) {
         this.execTime = execTime;
     }
 
-    public int getNbStep() {
-        return nbStep;
-    }
-
-    private void displayTenFirstHours(){
-        if((this.get_t()%6)==0 &&(this.get_t()<61) && (this.get_t()>0)) {
-            System.out.println(this);
-        }
-    }
-
-    public void displayResults(){
-
-        if(debug)
-            displayTenFirstHours();
-
-        if (this.get_t() == this.getNbStep() - 1) {
-            System.out.println("Changement a partir de l'etape " + this.getStepOfChange()
-                    + " soit après " + (this.getStepOfChange() * 600) / 3600 + " heure(s)");
-            System.out.println("Temps d'execution de la simulation : " + this.getExecTime() + " ms");
-        }
-    }
-
     @Override
     public String toString() {
-        int hour=((_t) * Constantes.DT)/3600;
+        int hour=((simulationStepActualNumber) * DT)/3600;
 
         String toReturn = "t=" + hour + " heure(s) ";
 
         for (int i = 0; i < 5; i++) {
-            toReturn += Constantes.toInt(currentTemp[i]) + ",";
+            toReturn += toInt(currentTemp[i]) + ",";
         }
-        toReturn += Constantes.toInt(currentTemp[5]) + "-" + Constantes.toInt(currentTemp[5]) + ",";
+        toReturn += toInt(currentTemp[5]) + "-" + toInt(currentTemp[5]) + ",";
         for (int i = 6; i < 8; i++) {
-            toReturn += Constantes.toInt(currentTemp[i]) + ",";
+            toReturn += toInt(currentTemp[i]) + ",";
         }
-        toReturn += Constantes.toInt(currentTemp[8]);
+        toReturn += toInt(currentTemp[8]);
         return toReturn;
     }
 }
@@ -291,11 +394,9 @@ public class SimulationEngine {
 class ToDisplay implements Runnable{
 
     private SimulationEngine se;
-    private int lastStep;
 
     public ToDisplay(SimulationEngine simulationEngine){
         this.se=simulationEngine;
-        this.lastStep=se.get_t();
     }
 
     @Override
