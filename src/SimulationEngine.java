@@ -115,22 +115,12 @@ public class SimulationEngine {
             new Thread(new ToDisplay(this)).start();
 
         for (int i = 1; i < currentTemp.length-1; i++) {
-            new Thread(new RunSimulation(this, i, nbStep)).start();
+            new Thread(createRunnable(i)).start();
             //System.out.println("Lancement du Thread"+i);
         }
 
     }
 
-    public void oldRunMultiThreadSimulation() {
-        barrier = new CyclicBarrier(8);//7 threads + 1 pour l'affichage
-        new Thread(new ToDisplay(this)).start();
-
-        for (int i = 1; i < currentTemp.length-1; i++) {
-            new Thread(new RunSimulation(this, i, nbStep)).start();
-            //System.out.println("Lancement du Thread"+i);
-        }
-
-    }
 
 
     /**
@@ -179,6 +169,11 @@ public class SimulationEngine {
 
     }
 
+    /**
+     * Methode chargee de cree un thread pour une partie du mur
+     * @param partNb le numero de la partie du mur
+     * @return la thread de la partie du mur concerne
+     */
     private Runnable createRunnable(final int partNb){
 
         return new Runnable(){
