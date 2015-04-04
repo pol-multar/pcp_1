@@ -177,9 +177,11 @@ public class SimulationEngine {
     private Runnable createRunnable(final int partNb){
 
         return new Runnable(){
+            int cpt;
+            int execTime=0;
+
             public void run(){
-                int cpt;
-                int execTime=0;
+
                 double newTemp;
                 long timeBegin;
 
@@ -244,6 +246,24 @@ public class SimulationEngine {
                 }
 
 
+            }
+        };
+
+    }
+
+    private Runnable createRunnableDisplay() {
+
+        return new Runnable(){
+            boolean needToDisplay=true;
+
+            @Override
+            public void run() {
+                if(needToDisplay) {
+                    displayResults();
+                    needToDisplay=false;
+                }else {
+                    needToDisplay=true;
+                }
             }
         };
 
