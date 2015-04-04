@@ -111,15 +111,15 @@ public class SimulationEngine {
 
 
     public void runMultiThreadSimulation() {
-            barrier = new CyclicBarrier(8);//7 threads + 1 pour l'affichage
-            new Thread(new ToDisplay(this)).start();
+            barrier = new CyclicBarrier(7, new Thread(createRunnableDisplay()));//7 threads car 7 parties
 
         for (int i = 1; i < currentTemp.length-1; i++) {
             new Thread(createRunnable(i)).start();
-            //System.out.println("Lancement du Thread"+i);
         }
 
     }
+
+
 
 
 
@@ -151,7 +151,7 @@ public class SimulationEngine {
             nextTemp[i] = updateWallPartTemp(currentTemp[i - 1], currentTemp[i], currentTemp[i + 1], this.insulationC);
         }
 
-        if (toInt(nextTemp[7]) > 20 && !isChanged) {
+        if (((int)nextTemp[7]) > 20 && !isChanged) {
             stepOfChange = simulationStepActualNumber;
             isChanged = true;
         }
@@ -171,6 +171,7 @@ public class SimulationEngine {
 
     /**
      * Methode chargee de cree un thread pour une partie du mur
+     * Cette methode est utilisee dans la partie multithreadee du projet avec barriere
      * @param partNb le numero de la partie du mur
      * @return la thread de la partie du mur concerne
      */
@@ -203,7 +204,7 @@ public class SimulationEngine {
              * Alors je le notifie a la simulation et je sauvegarde le numero de l'etape dans laquelle je me trouve
              */
                     if(partNb==7){
-                        if(SimulationEngine.toInt(newTemp)>20 && !isChanged()){
+                        if(((int)newTemp)>20 && !isChanged()){
                             setChanged(true);
                             setStepOfChange(cpt);
                         }
@@ -251,10 +252,14 @@ public class SimulationEngine {
 
     }
 
+    /**
+     * Methode chargee de l'affichage de la simulation multithreadee avec barriere
+     * @return un runnable qui affiche une fois sur deux les resultats
+     */
     private Runnable createRunnableDisplay() {
 
         return new Runnable(){
-            boolean needToDisplay=true;
+            boolean needToDisplay=false;
 
             @Override
             public void run() {
@@ -406,47 +411,3 @@ public class SimulationEngine {
     }
 }
 
-class ToDisplay implements Runnable{
-
-    private SimulationEngine se;
-
-    public ToDisplay(SimulationEngine simulationEngine){
-        this.se=simulationEngine;
-    }
-
-    @Override
-    public void run() {
-
-        //TODO vrai faux
-
-        int cpt;
-
-        for(cpt=0;cpt < se.getNbStep();cpt++) {
-/* On attend le calcul des nouvelles temperatures */
-            try {
-                se.getBarrier().await();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            } catch (BrokenBarrierException e) {
-                e.printStackTrace();
-            }
-
-        /* On attend l ecriture des nouvelles temperatures */
-
-            try {
-                se.getBarrier().await();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            } catch (BrokenBarrierException e) {
-                e.printStackTrace();
-            }
-
-            //System.out.println("Ecriture terminee on affiche");
-
-            se.displayResults();
-        }
-    }
-
-
-
-}
