@@ -1,5 +1,3 @@
-import java.util.concurrent.BrokenBarrierException;
-
 /**
  * @author mmultari
  * @version 01/03/2015
@@ -21,7 +19,7 @@ public class Main {
         }
         mySimu = new SimulationEngine(Material.BRICK, Material.GLASSWOOL,debug);
         if (debug) System.out.println(mySimu);
-        mySimu.runMultiThreadSimulation();
+        mySimu.runMultiThreadSimulation3();
         //mySimu.runMonoThreadSimulation();
 
     }
