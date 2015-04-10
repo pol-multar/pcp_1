@@ -57,31 +57,17 @@ public class SimulationEngine {
     //Le tableau contenant les valeurs des temperatures a afficher
     private double[][] savedTemp;
 
-
-    /**
-     * Constructeur de la classe SimulationEngine avec 100 000 iterations
-     *
-     * @param wallCompos       le materiau utilise pour composer le mur
-     * @param insolationCompos le materiau utilise pour isoler le mur
-     * @param debug            pour savoir si l'on doit afficher les etapes ou seulement le resultat final
-     */
-    public SimulationEngine(Material wallCompos, Material insolationCompos, boolean debug) {
-        this(wallCompos, insolationCompos, 100000, debug);
-    }
-
     /**
      * Constructeur de la classe SimulationEngine
      *
-     * @param wallCompos       le materiau utilise pour composer le mur
-     * @param insolationCompos le materiau utilise pour isoler le mur
-     * @param nbStep           le nombre d'etape de la simulation
-     * @param debug            pour savoir si l'on doit afficher les etapes ou seulement le resultat final
+     * @param nbStep    le nombre d'etape de la simulation
+     * @param debug     pour savoir si l'on doit afficher les etapes ou seulement le resultat final
      */
-    public SimulationEngine(Material wallCompos, Material insolationCompos, int nbStep, boolean debug) {
+    public SimulationEngine(int nbStep, boolean debug) {
         this.currentTemp = new double[9];
         this.nextTemp = new double[9];
-        this.wallC = calculateC(wallCompos);
-        this.insulationC = calculateC(insolationCompos);
+        this.wallC = calculateC(0.84, (double)1400, (double)840);
+        this.insulationC = calculateC(0.04, (double)30, (double)900);
         this.simulationStepActualNumber = 0;
         this.stepOfChange = 0;
         isChanged = false;
@@ -137,21 +123,21 @@ public class SimulationEngine {
      * Les parties 0 et 8 ne changent, elles, pas de temperature
      */
     public void runMultiThreadSimulation3() {
-        RendezVous rdvG = new RendezVous();
-        RendezVous rdvD = new RendezVous();
-        Thread[]threads=new Thread[7];
+        RendezVous rdvG = null;
+        RendezVous rdvD = null;
 
+        Thread[]threads=new Thread[7];
         //On lance les thread pour chaque partie du mur modifiee
-        for (int i = 1; i < 8; i++) {
-            threads[i-1]=new Thread(createRunnableSimu3(i, rdvG, rdvD));
-            threads[i-1].start();
-            /*Le rendez vous droit du thread actuel devient
-              le rendez vous gauche du prochain thread */
+        for (int i = 1; i < 7; i++) {
+        /*Le rendez vous droit du thread actuel devient
+          le rendez vous gauche du prochain thread */
             rdvG = rdvD;
             rdvD = new RendezVous();
+            threads[i-1]=new Thread(createRunnableSimu3(i, rdvG, rdvD));
+            threads[i-1].start();
         }
-
-
+        threads[6]= new Thread(createRunnableSimu3(7,rdvD,null));
+        threads[6].start();
         /*
         On attend que l'execution soit terminee pour en afficher les resultat
          */
@@ -163,13 +149,25 @@ public class SimulationEngine {
             }
         }
 
+        System.out.println("Simulation terminee");
+
         /*
         On affiche le resultat
          */
 
-        System.out.println("Temps d execution : "+this.execTime);
+        System.out.println("Temps d execution : " + (getExecTime() / 7));
+        setExecTime(0);
     }
 
+    public void testMulti()
+    {
+        for (int i = 0; i < 100 ; i++) {
+
+
+            runMultiThreadSimulation3();
+            System.out.println("step  "+i);
+        }
+    }
 
     /**
      * Méthode représentant l'évolution de la temperature au cours d'un cycle
@@ -327,42 +325,40 @@ public class SimulationEngine {
     private Runnable createRunnableSimu3(final int partNb, final RendezVous grv, final RendezVous drv) {
         return new Runnable() {
 
-            int cpt; //Un compteur
-            double newTemp; //La nouvelle temperature de la couche actuelle
-            double currentPTemp; // La temperature actuelle de la couche actuelle
-            double prevPTemp; // La temperature actuelle de la couche precedente
-            double nextPTemp; // La temperature actuelle de la couche suivante
-
             @Override
             public void run() {
 
+                for (int i = 0; i < getNbStep(); i++) {
+                    long timeBegin= System.currentTimeMillis();//Je recupere l'heure de debut de ma methode
+                    double currentTemp;
+                    double prevPTemp; // La temperature actuelle de la couche precedente
+                    double nextPTemp; // La temperature actuelle de la couche suivante
 
-                long timeBegin;
 
-                for (cpt = 0; cpt < getNbStep(); cpt++) {
+                    //Je recupere la temperature de la couche courrante
+                    currentTemp=getCurrentTemp(partNb);
 
-                    //Je recupere l'heure de debut de ma methode
-                    timeBegin = System.currentTimeMillis();
-
-                    //Je recupere les temperatures
-                    currentPTemp = getCurrentTemp(partNb);
-                    if(partNb!=1) {
-                        prevPTemp = grv.meetic(currentPTemp);
-                    }else{
+                    if(partNb==1) {
                         prevPTemp=OUTSIDETEMP;
-                    }
-                    if(partNb!=7) {
-                        nextPTemp = drv.meetic(currentPTemp);
+
                     }else{
-                        nextPTemp=INSIDETEMP;
+                        prevPTemp = grv.meetic(currentTemp);
                     }
+
+                    if(partNb==7) {
+                        nextPTemp=INSIDETEMP;
+                    }else{
+                        nextPTemp = drv.meetic(currentTemp);
+                    }
+
+                    double newTemp; //La nouvelle temperature de la couche actuelle
 
                     if (partNb < 5) {
-                        newTemp = updateWallPartTemp(prevPTemp, currentPTemp, nextPTemp, getWallC());
+                        savedTemp[partNb][i] = newTemp = updateWallPartTemp(prevPTemp, currentTemp, nextPTemp, getWallC());
                     } else if (partNb > 5) {
-                        newTemp = updateWallPartTemp(prevPTemp, currentPTemp, nextPTemp, getInsulationC());
+                        savedTemp[partNb][i] = newTemp = updateWallPartTemp(prevPTemp, currentTemp, nextPTemp, getInsulationC());
                     } else {
-                        newTemp = currentPTemp + getWallC() * (prevPTemp - currentPTemp) + getInsulationC() * (nextPTemp - currentPTemp);
+                        savedTemp[partNb][i] = newTemp = currentTemp+ getWallC() * (prevPTemp - currentTemp) + getInsulationC() * (nextPTemp - currentTemp);
                     }
                     /* Si je suis la derniere couche et que ma nouvelle temperature vaut 20
                      * Alors je le notifie a la simulation et je sauvegarde le numero de l'etape dans laquelle je me trouve
@@ -371,25 +367,24 @@ public class SimulationEngine {
                     if (partNb == 7) {
                         if (((int) newTemp) > 20 && !isChanged()) {
                             setChanged(true);
-                            setStepOfChange(cpt);
+                            setStepOfChange(i);
                         }
                     }
 
                     //Je met a jour la temperature dans les tableau de la simulation
                     updateCurrentTemp(newTemp, partNb);
-                    savedTemp[partNb][cpt] = newTemp;
 
                     //Je met a jour le numero d etape de la simulation si ce n est pas deja fait
 
-                    if (getSimulationStepActualNumber() < cpt) setSimulationStepActualNumber(cpt);
+                    if (getSimulationStepActualNumber() < i) setSimulationStepActualNumber(i);
 
 
                     if (partNb == 1) {
                         execTime += (int) (System.currentTimeMillis() - timeBegin);
-                        setExecTime(execTime);
                     }
 
                 }
+                //TU attend sur ta barriere
 
             }
         };
@@ -413,13 +408,14 @@ public class SimulationEngine {
 
     /**
      * Methode permettant de calculer C, representant la fraction de degres perdus par rayonnement
-     *
-     * @param material le materiau dont on souhaite calculer le C
-     * @return la valeur de C calculee
+     * @param lambda
+     * @param mu
+     * @param c
+     * @return un double contenant la valeur de C calculee
      */
-    private double calculateC(Material material) {
+    private double calculateC(double lambda, double mu, double c) {
 
-        return (material.getLambda() * (double) DT) / (material.getMu() * material.getC() * DX * DX);
+        return (lambda * (double) DT) / (mu * c * DX * DX);
 
     }
 

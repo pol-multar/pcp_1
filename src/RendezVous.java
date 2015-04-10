@@ -4,28 +4,29 @@
  */
 public class RendezVous {
 
-    boolean isFirst=true;
-    Double temperatures[] = new Double[2];
+    //Contient le nombre de thread presente au rdv
+    private int nbPresent=0;
+    //Contient les temperatures a retourner
+    private double temperatures[] = new double[2];
 
     /**
      * Le thread donne sa temperature et recupere celle de son voisin
      * @param tmp la temperature du thread qui arrive au rendez vous
      * @return la temperature du thread voisin
      */
-    public synchronized Double meetic(Double tmp){
-        if(isFirst){
-            isFirst=false;
+    public synchronized double meetic(Double tmp){
+        if(nbPresent==0){
+            nbPresent=1;
             temperatures[0] = tmp;
             try{
                 wait();
             } catch (InterruptedException e) {
-                e.printStackTrace();
             }
             return temperatures[1];
         }
         else{
+            nbPresent=0;
             temperatures[1] = tmp;
-            isFirst=true;
             notify();
             return temperatures[0];
         }
