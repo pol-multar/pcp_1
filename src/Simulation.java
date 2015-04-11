@@ -1,3 +1,5 @@
+import java.util.concurrent.CyclicBarrier;
+
 /**
  * @author mmultari
  * @version 10/04/2015
@@ -25,6 +27,11 @@ public class Simulation {
     //Contient le temps d'execution de l'algorithme
     private int execTime;
 
+    //Contient la barriere responsable de l'affichage
+    private CyclicBarrier barrier;
+
+    //Variable pour savoir si on souhaite l'affichage des valeurs
+    private boolean isDebug;
     /**
      * Methode permettant de calculer C,
      * representant la fraction de degres perdus par rayonnement
@@ -46,9 +53,10 @@ public class Simulation {
      * @param debug     pour savoir si l'on doit afficher les etapes ou seulement le resultat final
      */
     public Simulation(int nbStep, boolean debug){
-        this.savedTemp = new double[9][nbStep];
+        this.savedTemp = new double[nbStep][9];
         this.nbStep=nbStep;
         this.execTime=0;
+        this.isDebug=debug;
     }
 
     public int getNbStep() {
@@ -63,10 +71,48 @@ public class Simulation {
         this.execTime = execTime;
     }
 
+    public CyclicBarrier getBarrier() {
+        return barrier;
+    }
+
     public void multithreadSimulation(){
         RendezVous lrv = new RendezVous();
         RendezVous rrv = new RendezVous();
-        Thread [] threads = new Thread[6];
+        //Thread [] threads = new Thread[7];
+
+        //La barriere est chargee de l affichage
+        barrier = new CyclicBarrier(7, new Runnable() {
+            @Override
+            public void run() {
+                if(isDebug) {
+                    String line = "";
+                    System.out.println("Fin de la simulation, affichages des resultats : ");
+                    for (int i = 0; i < 61; i++) {
+                        if (i % 6 == 0) {
+                            System.out.print("t= " + (i + 1) / 6 + " heure(s) : ");
+
+                            for (int j = 1; j < 8; j++) {
+                                if (i % 6 == 0) {
+                                    if (j < 5) {
+                                        line += (int) savedTemp[i][j] + ",";
+                                    } else if (j == 5) {
+                                        line += (int) (savedTemp[i][j]) + "-" + (int) (savedTemp[i][j]) + ",";
+                                    } else {//j>5
+                                        line += (int) savedTemp[i][j] + ",";
+                                    }
+                                }
+                            }
+                            System.out.println(line);
+                            line = "";
+                        }
+                    }
+                }
+                System.out.println("temps d execution : "+getExecTime());
+            }
+        });
+        /*
+        Lancement des Threads
+         */
         for (int i = 1; i <8 ; i++) {
             System.out.println("Creation du thread "+i);
             new RunLayer(i,this,lrv,rrv).start();
@@ -87,7 +133,6 @@ public class Simulation {
 
     }
 
-    //public void
 
     /**
      * Méthode chargée de calculer la nouvelle valeur d'une partie de mur
@@ -111,7 +156,7 @@ public class Simulation {
         } else {//i==5
             newTemp = currentPart+ wallC * (previousPart - currentPart) + insulationC * (nextPart - currentPart);
         }
-        this.savedTemp[partNb][step]= newTemp;
+        this.savedTemp[step][partNb]= newTemp;
         return newTemp;
     }
 }

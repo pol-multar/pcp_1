@@ -5,9 +5,14 @@
 public class RendezVous {
 
     //Contient le nombre de thread presente au rdv
-    private int nbPresent=0;
+    protected int nbPresent;
     //Contient les temperatures a retourner
-    private double temperatures[] = new double[2];
+    protected double [] temperatures;
+
+    public RendezVous(){
+        nbPresent=0;
+        temperatures = new double[2];
+    }
 
     /**
      * Le thread donne sa temperature et recupere celle de son voisin

@@ -1,3 +1,5 @@
+import java.util.concurrent.BrokenBarrierException;
+
 /**
  * @author mmultari
  * @version 10/04/2015
@@ -25,9 +27,10 @@ public class RunLayer extends Thread {
     }
 
     public void run() {
-        long timeBegin = System.currentTimeMillis();
+
 
         for (int i = 0; i < simulation.getNbStep(); i++) {
+            long timeBegin = System.currentTimeMillis();
             double leftPartTemp;
             double rightPartTemp;
 
@@ -46,9 +49,18 @@ public class RunLayer extends Thread {
 
             if (partNb == 1) {
                 int tmp = simulation.getExecTime() + (int) (System.currentTimeMillis() - timeBegin);
+                timeBegin=(long)0;
                 simulation.setExecTime(tmp);
             }
 
+        }
+        //On attend que toutes les threads aient finies pour l'affichage
+        try {
+            simulation.getBarrier().await();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } catch (BrokenBarrierException e) {
+            e.printStackTrace();
         }
     }
 

@@ -15,9 +15,10 @@ public class Main {
         }else{
             debug = false;
         }
-        mySimu = new Simulation(100000,debug);
-        //if (debug) System.out.println(mySimu);
+
+            mySimu = new Simulation(100000,debug);
         mySimu.multithreadSimulation();
+
 
     }
 }
