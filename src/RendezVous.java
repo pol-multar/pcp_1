@@ -30,9 +30,9 @@ public class RendezVous {
             return temperatures[1];
         }
         else{
-            nbPresent=0;
             temperatures[1] = tmp;
             notify();
+            nbPresent=0;
             return temperatures[0];
         }
 

@@ -114,7 +114,6 @@ public class Simulation {
         Lancement des Threads
          */
         for (int i = 1; i <8 ; i++) {
-            System.out.println("Creation du thread "+i);
             new RunLayer(i,this,lrv,rrv).start();
             lrv=rrv;
             rrv = new RendezVous();
