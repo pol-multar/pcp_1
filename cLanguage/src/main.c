@@ -6,6 +6,7 @@
 
 #include <stdio.h>
 #include <time.h>
+#include <string.h>
 
 /**
      * Methode permettant de calculer C,
@@ -22,7 +23,7 @@
      }
 
 
-     int main(){
+     int main(int argc, char *argv[]){
 
 	//Temperatures en degré celsius
      	const float T0 = 20;
@@ -36,10 +37,10 @@
      	const float DX=0.04;
 
 	//Le tableau contenant les valeurs actuelles des couches
-     	int currentTemp[9];
+     	float currentTemp[9];
 
 	//Le tableau contenant les valeurs prochaines des couches
-     	int nextTemp[9];
+     	float nextTemp[9];
 
 	//Le C du materiau composant le mur
      	const float wallC=calculateC(0.84, 1400, 840, DT, DX);
@@ -54,35 +55,43 @@
      	int actualStep=0;
 
     //Le temps total d'execution de l'algorithme
-    double execTime=0; 	
+        double execTime; 	
 
 //Variables pour le calcul de temps d'execution
-time_t debut, fin;
-float duree;
-//debut=time(NULL);
-//some code
-//fin=time(NULL);
-//duree=difftime(fin,debut);
+        clock_t debut, fin;
+
 
 //Pour savoir si la derniere couche a changee de temperature et a quelle etape
-int isChanged=0;
-int stepOfChange;
+        int isChanged=0;
+        int stepOfChange;
 
 
 	//Initialisation du mur
-     	for (int i = 1; i < 8; ++i)
-     	{
-     		currentTemp[i]=nextTemp[i]=T0;		
-     	}
+        for (int i = 1; i < 8; ++i)
+        {
+         currentTemp[i]=nextTemp[i]=T0;		
+     }
 
-     	currentTemp[0] = nextTemp[0] = OUTSIDETEMP;
-     	currentTemp[8] = nextTemp[8] = INSIDETEMP;
+     currentTemp[0] = nextTemp[0] = OUTSIDETEMP;
+     currentTemp[8] = nextTemp[8] = INSIDETEMP;
+
+     //Affichage de l'etat du mur avant simulation
+     printf("t=%d heure(s)",0 );
+
+     for (int i = 0; i < 9; i++) {
+        printf("%d,",(int)currentTemp[i]);
+    }
+
+    printf("\n");
+
+//On fixe le temps d execution a zero
+    execTime=0;
 
 
-//Simulation en monothread
-for (int cpt = 0; cpt < maxStep; ++cpt)
-{
-	debut=time(NULL);
+    //Simulation en monothread
+    for (int cpt = 0; cpt < maxStep; ++cpt)
+    {
+       debut=clock();
 
         /**
          * La premiere et la dernière partie du mur (respectivement partie 0 et partie 8) sont des constantes,
@@ -90,7 +99,7 @@ for (int cpt = 0; cpt < maxStep; ++cpt)
          */
 
         /* Etape 1 : modification des parties du mur composees du premier materiau, soit les parties 1 a 4 */
-        for (int i = 1; i < 5; i++) {
+         for (int i = 1; i < 5; i++) {
             nextTemp[i] = currentTemp[i]+wallC*(currentTemp[i+1]+currentTemp[i-1]-2*(currentTemp[i]));
         }
 
@@ -116,11 +125,45 @@ for (int cpt = 0; cpt < maxStep; ++cpt)
 
         //Le cycle est termine
         actualStep++;
-        fin=time(NULL);
-        execTime += difftime(fin,debut);
+        //Mesure tf
+        fin=clock();
+        double time_spent = (double)(fin - debut) * 1000.0 / CLOCKS_PER_SEC;
+        execTime = execTime+time_spent;
+
+        //On affiche que les dix premieres heures
+        if((actualStep%6==0) && (actualStep <61) &&(actualStep>0)){
+
+            int hour = ((actualStep)*DT)/3600;
+
+
+            printf("t=%d heure(s)",hour );
+
+            for (int i = 0; i < 5; i++) {
+                printf("%d,",(int)currentTemp[i]);
+            }
+
+            printf("%d-%d,",(int)currentTemp[5],(int)currentTemp[5]);
+
+            for (int i = 6; i < 8; i++) {
+                printf("%d,",(int)currentTemp[i]);
+            }
+
+            printf("%d\n",(int)currentTemp[8]);
+
+        }
+
+        if(actualStep==maxStep-1){
+            printf("Changement de temperature de la derniere couche a partir de l etape %d \n",stepOfChange);
+            printf(" soit apres %d heures\n",(int)((stepOfChange*DT)/3600));
+            printf("Temps d execution de la simulation : %d ms\n",(int)execTime);
+        }
+
+    }
+
+
+
+
+
+
+    return 0;
 }
-
-
-
-     	return 0;
-     }
