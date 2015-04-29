@@ -69,10 +69,7 @@
 
 
 //Variables pour le calcul de temps d'execution
-        //clock_t debut, fin;
         struct timeval tbegin,tend;
-        //double execTime=0.;
-        //double texec=0.;
         long elapsed=0;
 
 
@@ -171,7 +168,6 @@
         if(actualStep==maxStep-1){
             printf("Changement de temperature de la derniere couche a partir de l etape %d \n",stepOfChange);
             printf(" soit apres %d heures\n",(int)((stepOfChange*DT)/3600));
-            //printf("Temps d execution de la simulation : %d ms (fonction clock)\n",(int)execTime);
             printf("Temps d execution de la simulation : %li ms (fonction gettimeofday)\n",elapsed/1000);
         }
 
@@ -298,9 +294,6 @@ void *layerEngine(void *nb)
     int number;
 
     number=*(int*)nb;
-
-    //printf("Je suis la couche %d\n",number);
-
     //Le C du materiau composant le mur
     const float wallC=calculateC(0.84, 1400, 840, DT, DX);
 
@@ -308,12 +301,8 @@ void *layerEngine(void *nb)
     const float insulationC=calculateC(0.04, 30, 900, DT, DX);
 
     //Variables pour le calcul de temps d'execution
-    //clock_t debut, fin;
     struct timeval t0,t1;
     long elapsed=0;
-
-    //Le temps total d'execution de l'algorithme
-    //double execTime=0;
 
     float leftPartTemp=20;
     float rightPartTemp=20;
@@ -334,8 +323,8 @@ void *layerEngine(void *nb)
 
     for (int i = 0; i < 100000; ++i)
     {
-        //debut=clock();
         gettimeofday(&t0, 0);
+
     //D'abord j'indique a mes voisins ma temperature a t
 
     if(number !=1){//le voisin de gauche
@@ -402,12 +391,9 @@ void *layerEngine(void *nb)
         }
 
         //Mesure tf
-        //fin=clock();
         gettimeofday(&t1, 0);
 
         if(number==1){
-            //double time_spent = difftime(stop,start);
-            //execTime+=time_spent;
             elapsed = (long) elapsed +((t1.tv_sec-t0.tv_sec)*1000000 + t1.tv_usec-t0.tv_usec);
         }
         
@@ -492,8 +478,8 @@ void queueDel (queue *q, float *out)
 int main(int argc, char *argv[]){
 
 	
-    monoThreadSimulation();
-    //multiThreadSimulation();
+    //monoThreadSimulation();
+    multiThreadSimulation();
 
 
     return 0;
