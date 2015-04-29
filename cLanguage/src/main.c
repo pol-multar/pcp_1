@@ -206,7 +206,7 @@ void* layerEngine(void *nb);
  queue* com[9][2];
 
     //Le tableau conteannt les temperatures calculee
- float savedTemp[100000][9];
+ float savedTemp[100001][9];
 
 
  void multiThreadSimulation(){
@@ -279,6 +279,32 @@ void* layerEngine(void *nb);
     pthread_join (c5, NULL); //printf("Fin de la thread c5\n");
     pthread_join (c6, NULL); //printf("Fin de la thread c6\n");
     pthread_join (c7, NULL); //printf("Fin de la thread c7\n");
+
+    printf("Affichage des resultats :\n");
+     for (int i = 0; i < 61; i++) {
+                        if (i % 6 == 0) {
+                            printf("t= %i heure(s) :",(i + 1) / 6);
+
+                            for (int j = 0; j < 9; j++) {
+                                if (i % 6 == 0) {
+                                    if (j < 5) {
+                                        printf( "%i,",(int) savedTemp[i][j]);
+                                    } else if (j == 5) {
+                                        //line += (int) (savedTemp[i][j]) + "-" + (int) (savedTemp[i][j]) + ",";
+                                        printf("%i-%i,",(int) (savedTemp[i][j]),(int) (savedTemp[i][j]));
+                                    } else if(j<8){
+                                        printf( "%i,",(int) savedTemp[i][j]);
+                                    } else {
+                                        printf("%i",(int) savedTemp[i][j]);
+                                    }
+                                }
+                            }
+                            printf("\n");
+                        }
+                    }
+
+
+
 
     for (int i = 0; i < 9; ++i)
     {
@@ -400,12 +426,11 @@ void *layerEngine(void *nb)
         //printf ("%d: new temp = %f\n",number,newTemp);
 
         currentPartTemp=newTemp;
-        savedTemp[i][number]=newTemp;
+        savedTemp[i+1][number]=newTemp;
 
 
     }
     if(number==1){
-        //printf("Temps d execution de la simulation : %d ms\n",(int)execTime);
         printf("Temps d execution de la simulation : %li ms (fonction gettimeofday)\n",elapsed/1000);
     }
 
@@ -480,6 +505,8 @@ int main(int argc, char *argv[]){
 	
     //monoThreadSimulation();
     multiThreadSimulation();
+
+
 
 
     return 0;
