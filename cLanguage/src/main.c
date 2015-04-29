@@ -22,36 +22,42 @@
      * @return un double contenant la valeur de C calculee
      */
 
-float calculateC(float lambda, float mu, float c, float DT, float DX) {
+     float calculateC(float lambda, float mu, float c, float DT, float DX) {
 
      	return (lambda * DT) / (mu * c * DX * DX);
 
      }
 
-void monoThreadSimulation(){
-
-        //Temperatures en degré celsius
-        const float T0 = 20;
-        const float OUTSIDETEMP = 110;
-        const float INSIDETEMP = 20;
+//Temperatures en degré celsius
+     const float T0 = 20;
+     const float OUTSIDETEMP = 110;
+     const float INSIDETEMP = 20;
 
     //Pas de temps (secondes)
-        const float DT=600;
+     const float DT=600;
 
     //Pas d'espace (m)
-        const float DX=0.04;
+     const float DX=0.04;
 
+
+/////////////////////////////////////////////////////////////Partie Iterative ///////////////////////////////////////////////////////////////////////////////
+
+     void monoThreadSimulation(){
+
+        //Le C du materiau composant le mur
+        const float wallC=calculateC(0.84, 1400, 840, DT, DX);
+
+    //Le C du materiau composant l'isolant
+        const float insulationC=calculateC(0.04, 30, 900, DT, DX);
+
+        
     //Le tableau contenant les valeurs actuelles des couches
         float currentTemp[9];
 
     //Le tableau contenant les valeurs prochaines des couches
         float nextTemp[9];
 
-    //Le C du materiau composant le mur
-        const float wallC=calculateC(0.84, 1400, 840, DT, DX);
 
-    //Le C du materiau composant l'isolant
-        const float insulationC=calculateC(0.04, 30, 900, DT, DX);
 
     //Le nombre d'etapes de la simulation
         int maxStep=100000;
@@ -74,16 +80,16 @@ void monoThreadSimulation(){
     //Initialisation du mur
         for (int i = 1; i < 8; ++i)
         {
-           currentTemp[i]=nextTemp[i]=T0;     
-       }
+         currentTemp[i]=nextTemp[i]=T0;     
+     }
 
-       currentTemp[0] = nextTemp[0] = OUTSIDETEMP;
-       currentTemp[8] = nextTemp[8] = INSIDETEMP;
+     currentTemp[0] = nextTemp[0] = OUTSIDETEMP;
+     currentTemp[8] = nextTemp[8] = INSIDETEMP;
 
      //Affichage de l'etat du mur avant simulation
-       printf("t=%d heure(s)",0 );
+     printf("t=%d heure(s)",0 );
 
-       for (int i = 0; i < 9; i++) {
+     for (int i = 0; i < 9; i++) {
         printf("%d,",(int)currentTemp[i]);
     }
 
@@ -96,7 +102,7 @@ void monoThreadSimulation(){
     //Simulation en monothread
     for (int cpt = 0; cpt < maxStep; ++cpt)
     {
-     debut=clock();
+       debut=clock();
 
         /**
          * La premiere et la dernière partie du mur (respectivement partie 0 et partie 8) sont des constantes,
@@ -167,11 +173,13 @@ void monoThreadSimulation(){
 
 }
 
+/////////////////////////////////////////////////////////////Partie MultiThread ///////////////////////////////////////////////////////////////////////////////
+
 void *producer (void *args);
 void *consumer (void *args);
 
 typedef struct {
-    int buf[QUEUESIZE];
+    float buf[QUEUESIZE];
     long head, tail;
     int full, empty;
     pthread_mutex_t *mut;
@@ -184,17 +192,25 @@ typedef struct {
 
 queue *queueInit (void);
 void queueDelete (queue *q);
-void queueAdd (queue *q, int in);
-void queueDel (queue *q, int *out);
+void queueAdd (queue *q, float in);
+void queueDel (queue *q, float *out);
 
 void* layerEngine(void *nb);
 
-queue* com[9][2];
+/* Le tableau contenant mes fifo
+ * La case 0 contient la temperature pour le voisin de gauche
+ * La case 1 contient la temperature pour le voisn de droite
+ */
+ queue* com[9][2];
 
-void multiThreadSimulation(){
+    //Le tableau conteannt les temperatures calculee
+ float savedTemp[100000][9];
+
+
+ void multiThreadSimulation(){
 
 //J'initialise le tableau contenant les communication entre threads
-for (int i = 0; i < 9; ++i)
+    for (int i = 0; i < 9; ++i)
     {
         com[i][0]=queueInit();
         com[i][1]=queueInit();
@@ -204,67 +220,54 @@ for (int i = 0; i < 9; ++i)
         }
     }
 
-pthread_t c1,c2,c3,c4,c5,c6,c7;
+    pthread_t c1,c2,c3,c4,c5,c6,c7;
 
-int nb1=1;
-int nb2=2;
-int nb3=3;
-int nb4=4;
-int nb5=5;
-int nb6=6;
-int nb7=7;
+    int nb1=1;
+    int nb2=2;
+    int nb3=3;
+    int nb4=4;
+    int nb5=5;
+    int nb6=6;
+    int nb7=7;
 
-//queue *fifo;
-//pthread_t pro, con;
-
-//fifo = queueInit ();
-/*
-if (fifo ==  NULL) {
-    fprintf (stderr, "main: Queue Init failed.\n");
-    exit (1);
-}*/
-
-
-if(pthread_create (&c1, NULL, layerEngine, &nb1)==-1){
-    perror("thread 1");
-    exit(1);
-}
-if(pthread_create (&c2, NULL, layerEngine, &nb2)==-1){
+    if(pthread_create (&c1, NULL, layerEngine, &nb1)==-1){
+        perror("thread 1");
+        exit(1);
+    }
+    if(pthread_create (&c2, NULL, layerEngine, &nb2)==-1){
         perror("thread 2");
-    exit(1);
-}
-if(pthread_create (&c3, NULL, layerEngine, &nb3)==-1){
+        exit(1);
+    }
+    if(pthread_create (&c3, NULL, layerEngine, &nb3)==-1){
         perror("thread 3");
-    exit(1);
-}
-if(pthread_create (&c4, NULL, layerEngine, &nb4)==-1){
+        exit(1);
+    }
+    if(pthread_create (&c4, NULL, layerEngine, &nb4)==-1){
         perror("thread 4");
-    exit(1);
-}
-if(pthread_create (&c5, NULL, layerEngine, &nb5)==-1){
+        exit(1);
+    }
+    if(pthread_create (&c5, NULL, layerEngine, &nb5)==-1){
         perror("thread 5");
-    exit(1);
-}
-if(pthread_create (&c6, NULL, layerEngine, &nb6)==-1){
+        exit(1);
+    }
+    if(pthread_create (&c6, NULL, layerEngine, &nb6)==-1){
         perror("thread 6");
-    exit(1);
-}
-if(pthread_create (&c7, NULL, layerEngine, &nb7)==-1){
+        exit(1);
+    }
+    if(pthread_create (&c7, NULL, layerEngine, &nb7)==-1){
         perror("thread 7");
-    exit(1);
-}
+        exit(1);
+    }
 
-//pthread_create (&pro, NULL, producer, fifo);
-//pthread_create (&con, NULL, consumer, fifo);
-pthread_join (c1, NULL); printf("Fin de la thread c1\n");
-pthread_join (c2, NULL); printf("Fin de la thread c2\n");
-pthread_join (c3, NULL); printf("Fin de la thread c3\n");
-pthread_join (c4, NULL); printf("Fin de la thread c4\n");
-pthread_join (c5, NULL); printf("Fin de la thread c5\n");
-pthread_join (c6, NULL); printf("Fin de la thread c6\n");
-pthread_join (c7, NULL); printf("Fin de la thread c7\n");
-//queueDelete (fifo);
-for (int i = 0; i < 9; ++i)
+    pthread_join (c1, NULL); printf("Fin de la thread c1\n");
+    pthread_join (c2, NULL); printf("Fin de la thread c2\n");
+    pthread_join (c3, NULL); printf("Fin de la thread c3\n");
+    pthread_join (c4, NULL); printf("Fin de la thread c4\n");
+    pthread_join (c5, NULL); printf("Fin de la thread c5\n");
+    pthread_join (c6, NULL); printf("Fin de la thread c6\n");
+    pthread_join (c7, NULL); printf("Fin de la thread c7\n");
+
+    for (int i = 0; i < 9; ++i)
     {
         queueDelete(com[i][0]);
         queueDelete(com[i][1]);
@@ -275,81 +278,112 @@ for (int i = 0; i < 9; ++i)
 
 void *layerEngine(void *nb)
 {
-int number;
+    int number;
 
-number=*(int*)nb;
+    number=*(int*)nb;
 
-printf("Je suis la couche %d\n",number);
+    printf("Je suis la couche %d\n",number);
 
-return (NULL);
+    //Le C du materiau composant le mur
+    const float wallC=calculateC(0.84, 1400, 840, DT, DX);
+
+    //Le C du materiau composant l'isolant
+    const float insulationC=calculateC(0.04, 30, 900, DT, DX);
+
+    float leftPartTemp=20;
+    float rightPartTemp=20;
+    float currentPartTemp=20;
+    float newTemp=0;
+
+    queue *ecritureG;
+    queue *ecritureD;
+
+    queue *lectureG;
+    queue *lectureD;
+
+    ecritureG=com[number][0];
+    ecritureD=com[number][1];
+
+    lectureG=com[number-1][1];
+    lectureD=com[number+1][0];
+
+    for (int i = 0; i < 10; ++i)
+    {
+
+    //D'abord j'indique a mes voisins ma temperature a t
+
+    if(number !=1){//le voisin de gauche
+        pthread_mutex_lock(ecritureG->mut);
+        while(ecritureG->full){
+        //J'attend que mon voisin recupere ma temperature
+            pthread_cond_wait(ecritureG->notFull, ecritureG->mut);
+        }
+        queueAdd(ecritureG,currentPartTemp);
+        pthread_mutex_unlock(ecritureG->mut);
+        pthread_cond_signal(ecritureG->notEmpty);
+    }
+
+    if(number !=7){
+     pthread_mutex_lock(ecritureD->mut);
+     while(ecritureD->full){
+        //J'attend que mon voisin recupere ma temperature
+        pthread_cond_wait(ecritureD->notFull, ecritureD->mut);
+    }
+    queueAdd(ecritureD,currentPartTemp);
+    pthread_mutex_unlock(ecritureD->mut);
+    pthread_cond_signal(ecritureD->notEmpty);   
 }
-/*
-void *producer (void *q)
-{
-    queue *fifo;
-    int i;
 
-    fifo = (queue *)q;
 
-    for (i = 0; i < LOOP; i++) {
-        pthread_mutex_lock (fifo->mut);
-        while (fifo->full) {
-            printf ("producer: queue FULL.\n");
-            pthread_cond_wait (fifo->notFull, fifo->mut);
+    //Puis je recupere la temperature de mes voisins
+    if(number != 1){//partie a gauche
+        pthread_mutex_lock(lectureG->mut);
+        while(lectureG->empty){
+            //J'attend que mon voisin mette sa temperature
+            pthread_cond_wait(lectureG->notEmpty, lectureG->mut);
         }
-        queueAdd (fifo, i);
-        pthread_mutex_unlock (fifo->mut);
-        pthread_cond_signal (fifo->notEmpty);
-        usleep (100000);
+        queueDel(lectureG, &leftPartTemp);
+        pthread_mutex_unlock (lectureG->mut);
+        pthread_cond_signal (lectureG->notFull);
+        printf ("%d: recieved %f.\n",number, leftPartTemp);
+    }else{
+        leftPartTemp = 110;
     }
-    for (i = 0; i < LOOP; i++) {
-        pthread_mutex_lock (fifo->mut);
-        while (fifo->full) {
-            printf ("producer: queue FULL.\n");
-            pthread_cond_wait (fifo->notFull, fifo->mut);
+
+    if(number!=7){
+        //je recupere la valeur du voisin de droite
+        pthread_mutex_lock(lectureD->mut);
+        while(lectureD->empty){
+            //J'attend que mon voisin mette sa temperature
+            pthread_cond_wait(lectureD->notEmpty, lectureD->mut);
         }
-        queueAdd (fifo, i);
-        pthread_mutex_unlock (fifo->mut);
-        pthread_cond_signal (fifo->notEmpty);
-        usleep (200000);
+        queueDel(lectureD, &rightPartTemp);
+        pthread_mutex_unlock (lectureD->mut);
+        pthread_cond_signal (lectureD->notFull);
+        printf ("%d: recieved %f.\n",number, rightPartTemp);
+    }else{
+        rightPartTemp = 20;
+    }    
+
+    //Maintenant que j'ai toutes les temperatures, je peux mettre a jour la mienne
+
+    if (number < 5) {
+        newTemp = currentPartTemp + wallC * (rightPartTemp + leftPartTemp - 2 * (currentPartTemp));
+    } else if (number > 5) {
+        newTemp = currentPartTemp + insulationC * (rightPartTemp + leftPartTemp - 2 * (currentPartTemp));
+        } else {//i==5
+            newTemp = currentPartTemp+ wallC * (leftPartTemp - currentPartTemp) + insulationC * (rightPartTemp - currentPartTemp);
+        }
+        
+        printf ("%d: new temp = %f\n",number,newTemp);
+
+        currentPartTemp=newTemp;
+
+
     }
+
     return (NULL);
 }
-
-void *consumer (void *q)
-{
-    queue *fifo;
-    int i, d;
-
-    fifo = (queue *)q;
-
-    for (i = 0; i < LOOP; i++) {
-        pthread_mutex_lock (fifo->mut);
-        while (fifo->empty) {
-            printf ("consumer: queue EMPTY.\n");
-            pthread_cond_wait (fifo->notEmpty, fifo->mut);
-        }
-        queueDel (fifo, &d);
-        pthread_mutex_unlock (fifo->mut);
-        pthread_cond_signal (fifo->notFull);
-        printf ("consumer: recieved %d.\n", d);
-        usleep(200000);
-    }
-    for (i = 0; i < LOOP; i++) {
-        pthread_mutex_lock (fifo->mut);
-        while (fifo->empty) {
-            printf ("consumer: queue EMPTY.\n");
-            pthread_cond_wait (fifo->notEmpty, fifo->mut);
-        }
-        queueDel (fifo, &d);
-        pthread_mutex_unlock (fifo->mut);
-        pthread_cond_signal (fifo->notFull);
-        printf ("consumer: recieved %d.\n", d);
-        usleep (50000);
-    }
-    return (NULL);
-}
-*/
 
 queue *queueInit (void)
 {
@@ -384,7 +418,7 @@ void queueDelete (queue *q)
     free (q);
 }
 
-void queueAdd (queue *q, int in)
+void queueAdd (queue *q, float in)
 {
     q->buf[q->tail] = in;
     q->tail++;
@@ -397,7 +431,7 @@ void queueAdd (queue *q, int in)
     return;
 }
 
-void queueDel (queue *q, int *out)
+void queueDel (queue *q, float *out)
 {
     *out = q->buf[q->head];
 
