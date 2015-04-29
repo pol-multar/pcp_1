@@ -124,6 +124,7 @@ void *consumer (void *q)
 	return (NULL);
 }
 
+/*
 #ifdef 0
 typedef struct {
 	int buf[QUEUESIZE];
@@ -133,7 +134,7 @@ typedef struct {
 	pthread_cond_t *notFull, *notEmpty;
 } queue;
 #endif
-
+*/
 queue *queueInit (void)
 {
 	queue *q;
