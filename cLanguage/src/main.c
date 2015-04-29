@@ -6,6 +6,7 @@
 
 #include <stdio.h>
 #include <time.h>
+#include <sys/time.h>
 #include <string.h>
 #include <pthread.h>
 #include <unistd.h>
@@ -65,11 +66,14 @@
     //Le numero de l'etape courante
         int actualStep=0;
 
-    //Le temps total d'execution de l'algorithme
-        double execTime;    
+
 
 //Variables pour le calcul de temps d'execution
-        clock_t debut, fin;
+        //clock_t debut, fin;
+        struct timeval tbegin,tend;
+        //double execTime=0.;
+        //double texec=0.;
+        long elapsed=0;
 
 
 //Pour savoir si la derniere couche a changee de temperature et a quelle etape
@@ -80,29 +84,26 @@
     //Initialisation du mur
         for (int i = 1; i < 8; ++i)
         {
-         currentTemp[i]=nextTemp[i]=T0;     
-     }
+           currentTemp[i]=nextTemp[i]=T0;     
+       }
 
-     currentTemp[0] = nextTemp[0] = OUTSIDETEMP;
-     currentTemp[8] = nextTemp[8] = INSIDETEMP;
+       currentTemp[0] = nextTemp[0] = OUTSIDETEMP;
+       currentTemp[8] = nextTemp[8] = INSIDETEMP;
 
      //Affichage de l'etat du mur avant simulation
-     printf("t=%d heure(s)",0 );
+       printf("t=%d heure(s)",0 );
 
-     for (int i = 0; i < 9; i++) {
+       for (int i = 0; i < 9; i++) {
         printf("%d,",(int)currentTemp[i]);
     }
 
     printf("\n");
 
-//On fixe le temps d execution a zero
-    execTime=0;
-
-
     //Simulation en monothread
     for (int cpt = 0; cpt < maxStep; ++cpt)
     {
-       debut=clock();
+     //debut=clock();
+     gettimeofday(&tbegin,0);
 
         /**
          * La premiere et la dernière partie du mur (respectivement partie 0 et partie 8) sont des constantes,
@@ -137,9 +138,13 @@
         //Le cycle est termine
         actualStep++;
         //Mesure tf
-        fin=clock();
-        double time_spent = (double)(fin - debut) * 1000.0 / CLOCKS_PER_SEC;
-        execTime = execTime+time_spent;
+        //fin=clock();
+        gettimeofday(&tend,0);
+        //double time_spent = (double)(fin - debut) * 1000.0 / CLOCKS_PER_SEC;
+        //texec=texec+((double)(1000*(tend.tv_sec-tbegin.tv_sec)+((tend.tv_usec-tbegin.tv_usec)/1000)))/1000.;
+        elapsed = (long)elapsed+(tend.tv_sec-tbegin.tv_sec)*1000000 + tend.tv_usec-tbegin.tv_usec;//µs
+
+        //execTime = execTime+time_spent;
 
         //On affiche que les dix premieres heures
         if((actualStep%6==0) && (actualStep <61) &&(actualStep>0)){
@@ -166,14 +171,15 @@
         if(actualStep==maxStep-1){
             printf("Changement de temperature de la derniere couche a partir de l etape %d \n",stepOfChange);
             printf(" soit apres %d heures\n",(int)((stepOfChange*DT)/3600));
-            printf("Temps d execution de la simulation : %d ms\n",(int)execTime);
+            //printf("Temps d execution de la simulation : %d ms (fonction clock)\n",(int)execTime);
+            printf("Temps d execution de la simulation : %li ms (fonction gettimeofday)\n",elapsed/1000);
         }
 
     }
 
 }
 
-/////////////////////////////////////////////////////////////Partie MultiThread ///////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////Partie MultiThread  ///////////////////////////////////////////////////////////////////////////////
 
 void *producer (void *args);
 void *consumer (void *args);
@@ -208,6 +214,17 @@ void* layerEngine(void *nb);
 
 
  void multiThreadSimulation(){
+
+    //J'initialise le tableau de resultat
+    for (int i = 0; i < 100000; ++i)
+    {
+        for (int j = 1; j < 9; ++j)
+        {
+            savedTemp[i][j]=20;
+        }
+        savedTemp[i][0]=110;
+        savedTemp[i][8]=20;
+    }
 
 //J'initialise le tableau contenant les communication entre threads
     for (int i = 0; i < 9; ++i)
@@ -259,13 +276,13 @@ void* layerEngine(void *nb);
         exit(1);
     }
 
-    pthread_join (c1, NULL); printf("Fin de la thread c1\n");
-    pthread_join (c2, NULL); printf("Fin de la thread c2\n");
-    pthread_join (c3, NULL); printf("Fin de la thread c3\n");
-    pthread_join (c4, NULL); printf("Fin de la thread c4\n");
-    pthread_join (c5, NULL); printf("Fin de la thread c5\n");
-    pthread_join (c6, NULL); printf("Fin de la thread c6\n");
-    pthread_join (c7, NULL); printf("Fin de la thread c7\n");
+    pthread_join (c1, NULL); //printf("Fin de la thread c1\n");
+    pthread_join (c2, NULL); //printf("Fin de la thread c2\n");
+    pthread_join (c3, NULL); //printf("Fin de la thread c3\n");
+    pthread_join (c4, NULL); //printf("Fin de la thread c4\n");
+    pthread_join (c5, NULL); //printf("Fin de la thread c5\n");
+    pthread_join (c6, NULL); //printf("Fin de la thread c6\n");
+    pthread_join (c7, NULL); //printf("Fin de la thread c7\n");
 
     for (int i = 0; i < 9; ++i)
     {
@@ -282,13 +299,21 @@ void *layerEngine(void *nb)
 
     number=*(int*)nb;
 
-    printf("Je suis la couche %d\n",number);
+    //printf("Je suis la couche %d\n",number);
 
     //Le C du materiau composant le mur
     const float wallC=calculateC(0.84, 1400, 840, DT, DX);
 
     //Le C du materiau composant l'isolant
     const float insulationC=calculateC(0.04, 30, 900, DT, DX);
+
+    //Variables pour le calcul de temps d'execution
+    //clock_t debut, fin;
+    struct timeval t0,t1;
+    long elapsed=0;
+
+    //Le temps total d'execution de l'algorithme
+    //double execTime=0;
 
     float leftPartTemp=20;
     float rightPartTemp=20;
@@ -307,9 +332,10 @@ void *layerEngine(void *nb)
     lectureG=com[number-1][1];
     lectureD=com[number+1][0];
 
-    for (int i = 0; i < 10; ++i)
+    for (int i = 0; i < 100000; ++i)
     {
-
+        //debut=clock();
+        gettimeofday(&t0, 0);
     //D'abord j'indique a mes voisins ma temperature a t
 
     if(number !=1){//le voisin de gauche
@@ -324,8 +350,8 @@ void *layerEngine(void *nb)
     }
 
     if(number !=7){
-     pthread_mutex_lock(ecritureD->mut);
-     while(ecritureD->full){
+       pthread_mutex_lock(ecritureD->mut);
+       while(ecritureD->full){
         //J'attend que mon voisin recupere ma temperature
         pthread_cond_wait(ecritureD->notFull, ecritureD->mut);
     }
@@ -345,7 +371,7 @@ void *layerEngine(void *nb)
         queueDel(lectureG, &leftPartTemp);
         pthread_mutex_unlock (lectureG->mut);
         pthread_cond_signal (lectureG->notFull);
-        printf ("%d: recieved %f.\n",number, leftPartTemp);
+        //printf ("%d: recieved %f.\n",number, leftPartTemp);
     }else{
         leftPartTemp = 110;
     }
@@ -360,7 +386,7 @@ void *layerEngine(void *nb)
         queueDel(lectureD, &rightPartTemp);
         pthread_mutex_unlock (lectureD->mut);
         pthread_cond_signal (lectureD->notFull);
-        printf ("%d: recieved %f.\n",number, rightPartTemp);
+        //printf ("%d: recieved %f.\n",number, rightPartTemp);
     }else{
         rightPartTemp = 20;
     }    
@@ -374,13 +400,30 @@ void *layerEngine(void *nb)
         } else {//i==5
             newTemp = currentPartTemp+ wallC * (leftPartTemp - currentPartTemp) + insulationC * (rightPartTemp - currentPartTemp);
         }
+
+        //Mesure tf
+        //fin=clock();
+        gettimeofday(&t1, 0);
+
+        if(number==1){
+            //double time_spent = difftime(stop,start);
+            //execTime+=time_spent;
+            elapsed = (long) elapsed +((t1.tv_sec-t0.tv_sec)*1000000 + t1.tv_usec-t0.tv_usec);
+        }
         
-        printf ("%d: new temp = %f\n",number,newTemp);
+        //printf ("%d: new temp = %f\n",number,newTemp);
 
         currentPartTemp=newTemp;
+        savedTemp[i][number]=newTemp;
 
 
     }
+    if(number==1){
+        //printf("Temps d execution de la simulation : %d ms\n",(int)execTime);
+        printf("Temps d execution de la simulation : %li ms (fonction gettimeofday)\n",elapsed/1000);
+    }
+
+
 
     return (NULL);
 }
@@ -449,8 +492,8 @@ void queueDel (queue *q, float *out)
 int main(int argc, char *argv[]){
 
 	
-    //monoThreadSimulation();
-    multiThreadSimulation();
+    monoThreadSimulation();
+    //multiThreadSimulation();
 
 
     return 0;
